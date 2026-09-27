@@ -10,9 +10,9 @@ WINDOW_END = datetime(2026, 9, 26, 20, tzinfo=timezone.utc)  # last bar open inc
 BARS_PER_YEAR = 2190
 TAKER_FEE = 0.0006
 SLIPPAGE = 0.0002  # assumption, labelled in the report
-AGENT_MODEL = "gemini-3.1-flash-lite"  # version 3.1-flash-lite-05-2026, before the window
-AGENT_FALLBACK_MODEL = None  # every later Gemini release postdates 2026-07-01; no fallback that keeps the window clean
-PARSER_MODEL = "gemini-3.1-flash-lite"
+AGENT_MODEL = "claude-haiku-4-5-20251001"  # released Oct 2025, training data to early 2025: before the window
+AGENT_FALLBACK_MODEL = None  # no fallback: a later model could have seen the window
+PARSER_MODEL = "gemini-3.5-flash-lite"  # parsing only; not contamination-sensitive
 AGENT_RUNS = 3
 LOOKBACK_RETURNS = 12
 VOL_WINDOW = 30

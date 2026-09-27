@@ -29,7 +29,7 @@ def build_report(runs=C.AGENT_RUNS, draws=C.PLACEBO_DRAWS, progress=print) -> di
         "model": C.AGENT_MODEL, "symbols": m.symbols, "times": [int(t) for t in m.times],
         "invalid_outputs": invalid, "runs": [p.astype(int).tolist() for p in positions],
         "sample_decisions": sample_decisions(m)}))
-    rep["agent"] = {"model": C.AGENT_MODEL, "model_version": "3.1-flash-lite-05-2026",
+    rep["agent"] = {"model": C.AGENT_MODEL, "model_version": "claude-haiku-4-5-20251001 (Anthropic, released 2025-10)", "runner": "Claude Code headless, default system prompt replaced, tools off",
                     "runs": runs, "decisions": runs * len(m.symbols) * len(m.times),
                     "inputs": "masked asset name, last 12 x 4H returns, 30-bar volatility, "
                               "US exchange closed flag, current position; no ticker, no date"}

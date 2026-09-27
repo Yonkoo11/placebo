@@ -34,7 +34,7 @@ def parse_question(q: str) -> dict:
                 "hours: only while the US stock exchange is closed (\"us_closed\"), only while it "
                 "is open (\"us_open\"), or no restriction (\"all\")? Reply JSON "
                 "{\"markets\": [..], \"hours\": \"all\"|\"us_closed\"|\"us_open\"}.\n\nQuestion: " + q[:500])}]}],
-            "generationConfig": {"responseMimeType": "application/json", "thinkingConfig": {"thinkingBudget": 0}},
+            "generationConfig": {"responseMimeType": "application/json"},
         }
         req = urllib.request.Request(
             f"https://generativelanguage.googleapis.com/v1beta/models/{C.PARSER_MODEL}:generateContent",

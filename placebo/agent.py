@@ -5,6 +5,7 @@ Inputs never include a ticker or a date. Every call is cached in data/agent_runs
 """
 import json
 import os
+import subprocess
 import threading
 from concurrent.futures import ThreadPoolExecutor
 import time
@@ -67,6 +68,34 @@ class _Pace:
 PACE = _Pace(float(os.environ.get("PLACEBO_RPM", C.LLM_RPM)))
 
 
+def _claude_cli(prompt: str, model: str) -> str:
+    """Claude through the local Claude Code login (used when no API credit is available).
+
+    The default Claude Code system prompt is replaced by SYSTEM, tools are disabled and hooks are
+    off, so the model sees exactly what an API call would send.
+    """
+    env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}
+    out = subprocess.run(
+        ["claude", "-p", "--model", model, "--system-prompt", SYSTEM, "--output-format", "json",
+         "--disable-slash-commands", "--no-session-persistence",
+         "--disallowedTools", "*", "--settings", '{"disableAllHooks":true}',
+         "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}'],
+        input=prompt, capture_output=True, text=True, timeout=120, env=env)
+    if out.returncode != 0:
+        raise RuntimeError(f"claude exit {out.returncode}")
+    d = json.loads(out.stdout)
+    if d.get("is_error"):
+        raise RuntimeError("claude error")
+    text = d.get("result", "").strip()
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1].rsplit("```", 1)[0]
+    return text
+
+
+def call_model(prompt: str, model: str) -> str:
+    return _claude_cli(prompt, model) if model.startswith("claude") else _gemini(prompt, model)
+
+
 def _gemini(prompt: str, model: str) -> str:
     PACE.wait()
     body = {
@@ -108,7 +137,7 @@ def decide(prompt: str, assets: list[str], model: str, attempts: int = 8) -> tup
     last = ""
     for attempt in range(attempts):
         try:
-            text = _gemini(prompt, model)
+            text = call_model(prompt, model)
             return parse(text, assets), text[:600]
         except urllib.error.HTTPError as e:
             last = f"HTTP {e.code}"
