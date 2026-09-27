@@ -93,8 +93,34 @@ def main(argv):
     (OUT / "report.json").write_text(json.dumps(r, indent=1))
     (OUT / "report.md").write_text(to_markdown(r))
     (OUT.parent / "public" / "report.json").write_text(json.dumps(r))
+    write_public_logs()
     print(to_markdown(r))
     return 0
+
+
+def write_public_logs():
+    """Static files the page reads: every decision, the paper log and the three hours questions."""
+    from . import service as S
+    pub = OUT.parent / "public"
+    recs = [json.loads(l) for l in A.CACHE.read_text().splitlines()]
+    dec = [{"run": r["run"], "t": r["t"], "symbol": s, "position": d["position"], "reason": d["reason"]}
+           for r in sorted((r for r in recs if r["model"] == C.AGENT_MODEL), key=lambda r: (r["run"], r["t"]))
+           for s, d in r["decisions"].items()]
+    (pub / "decisions.json").write_text(json.dumps({"model": C.AGENT_MODEL, "count": len(dec), "decisions": dec}))
+    paper_path = DATA / "paper.jsonl"
+    paper = [json.loads(l) for l in paper_path.read_text().splitlines()] if paper_path.exists() else []
+    keep = ("logged_at", "bar", "model", "prices", "positions", "reasons", "pnl_since_last", "source")
+    (pub / "paper.json").write_text(json.dumps([{k: p.get(k) for k in keep} for p in paper]))
+    all_runs, _ = S.reference_runs()
+    m = E.load_market()
+    forest = {}
+    for hours in S.HOURS:
+        res = E.evaluate([S.restrict_hours(r, m, hours) for r in all_runs], m)
+        pl = res["placebo"]
+        forest[hours] = {"verdict": res["verdict"], "percentile": pl["percentile"], "p_value": pl["p_value"],
+                         "agent_sharpe": pl["agent_sharpe"], "p05": pl["placebo_p05"], "p95": pl["placebo_p95"],
+                         "mean": pl["placebo_mean"]}
+    (pub / "forest.json").write_text(json.dumps(forest))
 
 
 if __name__ == "__main__":
