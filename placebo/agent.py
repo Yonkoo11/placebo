@@ -6,6 +6,7 @@ Inputs never include a ticker or a date. Every call is cached in data/agent_runs
 import json
 import os
 import subprocess
+import tempfile
 import threading
 from concurrent.futures import ThreadPoolExecutor
 import time
@@ -19,6 +20,7 @@ from . import config as C
 from .data import DATA
 
 CACHE = DATA / "agent_runs.jsonl"
+CLEAN_DIR = tempfile.mkdtemp(prefix="placebo-agent-")
 
 SYSTEM = (
     "You are an autonomous trading agent managing three positions, one in each of three perpetual "
@@ -75,12 +77,15 @@ def _claude_cli(prompt: str, model: str) -> str:
     off, so the model sees exactly what an API call would send.
     """
     env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}
+    # An empty working directory and local-only settings keep every CLAUDE.md, memory file and
+    # project context out of the prompt. Claude Code still states today's date in its environment
+    # block; that reveals no prices (the model's knowledge ends in early 2025) and is disclosed.
     out = subprocess.run(
         ["claude", "-p", "--model", model, "--system-prompt", SYSTEM, "--output-format", "json",
-         "--disable-slash-commands", "--no-session-persistence",
+         "--disable-slash-commands", "--no-session-persistence", "--setting-sources", "local",
          "--disallowedTools", "*", "--settings", '{"disableAllHooks":true}',
          "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}'],
-        input=prompt, capture_output=True, text=True, timeout=120, env=env)
+        input=prompt, capture_output=True, text=True, timeout=120, env=env, cwd=CLEAN_DIR)
     if out.returncode != 0:
         raise RuntimeError(f"claude exit {out.returncode}")
     d = json.loads(out.stdout)
@@ -171,10 +176,12 @@ def run_agent(m, runs: int = C.AGENT_RUNS, model: str = C.AGENT_MODEL, progress=
     invalid = [0]
     done = [0]
 
-    def lane(run: int):
-        cur = [0] * S
+    bounds = np.linspace(0, T, C.AGENT_SEGMENTS + 1).astype(int)
+
+    def lane(run: int, lo: int, hi: int):
+        cur = [0] * S  # every segment starts flat (disclosed in the report)
         with open(CACHE, "a") as fh:
-            for t in range(T):
+            for t in range(lo, hi):
                 key = (model, run, int(m.times[t]))
                 if key in cache:
                     rec = cache[key]
@@ -200,9 +207,11 @@ def run_agent(m, runs: int = C.AGENT_RUNS, model: str = C.AGENT_MODEL, progress=
                     if done[0] % 100 == 0:
                         progress(f"  {done[0]}/{runs * T} bar decisions")
 
-    # Runs go in parallel under the shared pace; each run is sequential because the agent sees
-    # its own current position.
-    with ThreadPoolExecutor(max_workers=runs) as ex:
-        for f in [ex.submit(lane, r) for r in range(runs)]:
+    # Each run is split into consecutive segments that replay in parallel. Inside a segment bars
+    # are sequential because the agent sees its own current position.
+    with ThreadPoolExecutor(max_workers=runs * C.AGENT_SEGMENTS) as ex:
+        jobs = [ex.submit(lane, r, int(bounds[i]), int(bounds[i + 1]))
+                for r in range(runs) for i in range(C.AGENT_SEGMENTS)]
+        for f in jobs:
             f.result()
     return positions, invalid[0]

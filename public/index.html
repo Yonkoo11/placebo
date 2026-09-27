@@ -137,7 +137,7 @@ footer a, .method a { color: inherit; }
 
   <section class="method">
     <h2>How the trial works</h2>
-    <p>The reference agent is Claude Haiku 4.5 (released October 2025, so it cannot have seen these prices). Every 4 hours it sets a long, flat or short position in three Bitget USDT-M perps: NVDAUSDT, TSLAUSDT and QQQUSDT. It sees the last twelve 4-hour returns, recent volatility, whether the US exchange is closed, and its own position. It never sees a ticker or a date. It was run three times.</p>
+    <p>The reference agent is Claude Haiku 4.5 (released October 2025, so it cannot have seen these prices). Every 4 hours it sets a long, flat or short position in three Bitget USDT-M perps: NVDAUSDT, TSLAUSDT and QQQUSDT. It sees the last twelve 4-hour returns, recent volatility, whether the US exchange is closed, and its own position. It never sees a ticker or a price date. It was run twice, and each run replays the window as four segments that each start flat.</p>
     <p>Each twin keeps the agent's exact timing and size and redraws the direction of every holding at random. Every arm pays Bitget's 0.06% taker fee, an assumed 0.02% slippage and Bitget's recorded funding. The verdict rule was fixed before any run: deploy only if the agent beats 95% of twins in every run, beats a simple momentum rule, agrees with itself on at least 80% of decisions, and never draws down more than 20%.</p>
     <p><a href="/report.json">Raw report (JSON)</a> · <a href="https://github.com/yonkoo11/placebo">Code and data</a></p>
   </section>
