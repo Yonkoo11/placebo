@@ -68,7 +68,7 @@ git clone https://github.com/yonkoo11/placebo && cd placebo
 pip install numpy pytest
 python3 -m placebo.data --check     # → NVDAUSDT 528 bars  taker 0.0006  funding events 264 (non-zero 49)  (and TSLA, QQQ)
 python3 -m pytest -q tests          # → 15 passed
-python3 -m placebo.trial --runs 2 | head -8
+python3 -m placebo.trial --runs 2 | grep -E "Verdict|Beat"
 # → Verdict: **DO NOT DEPLOY**
 # → - Beat 30% of 2000 placebo twins, p = 0.705 (one-sided, worst run)
 ```
