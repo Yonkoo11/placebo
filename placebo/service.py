@@ -117,8 +117,20 @@ def parse_csv(text: str, m: E.Market) -> np.ndarray:
     return pos
 
 
+_MOOD = {"at": 0.0, "value": None}
+
+
 def market_mood() -> dict:
-    """Bitget MCP Fear & Greed. Returns {"ok": False, "code": ...} when the service is down."""
+    """Bitget MCP Fear & Greed, checked at most every 5 minutes per server instance."""
+    import time
+    if _MOOD["value"] is not None and time.time() - _MOOD["at"] < 300:
+        return _MOOD["value"]
+    _MOOD["value"], _MOOD["at"] = _fetch_mood(), time.time()
+    return _MOOD["value"]
+
+
+def _fetch_mood() -> dict:
+    """Returns {"ok": False, "code": ...} when the service is down."""
     url = "https://agent.bitget.com/mcp"
     hdr = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream",
            "User-Agent": "placebo-trial"}
