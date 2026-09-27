@@ -111,6 +111,7 @@ footer a, .method a { color: inherit; }
   <form id="f" novalidate>
     <label class="q" for="q">Ask</label>
     <input id="q" type="text" value="Should I let the reference agent trade NVDA, TSLA and QQQ?" autocomplete="off" maxlength="500">
+    <p class="status">Also try: “What if it only trades while the US market is closed?”</p>
     <label class="file">Or test your own agent: upload positions (time,symbol,position)
       <input id="csv" type="file" accept=".csv,text/csv">
     </label>
@@ -165,7 +166,8 @@ const fmt = (x, d = 2) => (x == null ? "–" : x.toFixed(d));
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 function drawHist(pl) {
-  const svg = $("hist"), W = 720, H = 180, pad = 24, n = pl.histogram.length;
+  const svg = $("hist"), W = Math.max(300, Math.round(svg.getBoundingClientRect().width) || 720), H = 180, pad = 24, n = pl.histogram.length;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   const max = Math.max(...pl.histogram), lo = pl.bin_edges[0], hi = pl.bin_edges[n];
   const x = (v) => pad + ((v - lo) / (hi - lo)) * (W - 2 * pad);
   const bw = (W - 2 * pad) / n;
@@ -175,6 +177,11 @@ function drawHist(pl) {
   }).join("");
   const ax = Math.min(W - pad, Math.max(pad, x(pl.agent_sharpe)));
   out += `<line x1="${pad}" x2="${W - pad}" y1="${H - 24}" y2="${H - 24}" stroke="var(--rule)"/>`;
+  if (lo < 0 && hi > 0) {
+    const zx = x(0);
+    out += `<line x1="${zx}" x2="${zx}" y1="${H - 24}" y2="${H - 18}" stroke="var(--muted)"/>`;
+    out += `<text x="${zx}" y="${H - 6}" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--muted)" text-anchor="middle">0</text>`;
+  }
   out += `<line x1="${ax}" x2="${ax}" y1="8" y2="${H - 24}" stroke="var(--agent)" stroke-width="2"/>`;
   out += `<text x="${ax + (ax > W - 140 ? -6 : 6)}" y="20" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--agent)" text-anchor="${ax > W - 140 ? "end" : "start"}">agent ${fmt(pl.agent_sharpe)}</text>`;
   out += `<text x="${pad}" y="${H - 6}" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--muted)">${fmt(lo)}</text>`;
@@ -189,6 +196,7 @@ function render(r) {
   $("vtext").textContent = text(p, c);
   $("pline").textContent = `p = ${r.placebo.p_value.toFixed(3)} against 2,000 placebo twins (one-sided).` +
     (r.p_values_per_run.length > 1 ? ` Worst of ${r.p_values_per_run.length} runs; consistency ${c}%.` : " One run: consistency needs 2+ runs.");
+  if (r.hours && r.hours !== "all") $("pline").textContent += ` Positions kept only while the US exchange is ${r.hours === "us_closed" ? "closed" : "open"}.`;
   drawHist(r.placebo);
   const names = { agent: r.agent_source === "uploaded" ? "your agent" : "reference agent", rule: "momentum rule", hold: "buy and hold" };
   $("arms").innerHTML = `<tr><th>arm</th><th>Sharpe</th><th>return</th><th>max DD</th><th>win</th><th>trades/day</th><th>costs</th></tr>` +
@@ -196,7 +204,9 @@ function render(r) {
   $("reasons").innerHTML = (r.sample_decisions || []).map((d) =>
     `<li><span class="num">${new Date(d.t).toISOString().slice(5, 16).replace("T", " ")} ${esc(d.symbol)} ${d.position > 0 ? "long" : "short"}</span>${esc(d.reason)}</li>`).join("");
   $("mood").textContent = r.mood && !r.mood.ok ? `Bitget data service unavailable (HTTP ${r.mood.code}). Market mood not shown.` : "";
-  const a = $("answer"); a.hidden = false; a.classList.remove("show"); void a.offsetWidth; a.classList.add("show");
+  const a = $("answer"); a.hidden = false;
+  drawHist(r.placebo);  // redraw now that the card has a width
+  a.classList.remove("show"); void a.offsetWidth; a.classList.add("show");
 }
 
 $("f").addEventListener("submit", async (e) => {

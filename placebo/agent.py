@@ -6,6 +6,7 @@ Inputs never include a ticker or a date. Every call is cached in data/agent_runs
 import json
 import os
 import threading
+from concurrent.futures import ThreadPoolExecutor
 import time
 import urllib.error
 import urllib.request
@@ -170,8 +171,9 @@ def run_agent(m, runs: int = C.AGENT_RUNS, model: str = C.AGENT_MODEL, progress=
                     if done[0] % 100 == 0:
                         progress(f"  {done[0]}/{runs * T} bar decisions")
 
-    # Runs go one after another so a quota stop still leaves complete runs behind.
-    for r in range(runs):
-        lane(r)
-        progress(f"  run {r + 1}/{runs} complete")
+    # Runs go in parallel under the shared pace; each run is sequential because the agent sees
+    # its own current position.
+    with ThreadPoolExecutor(max_workers=runs) as ex:
+        for f in [ex.submit(lane, r) for r in range(runs)]:
+            f.result()
     return positions, invalid[0]

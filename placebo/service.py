@@ -29,8 +29,11 @@ def parse_question(q: str) -> dict:
     try:
         body = {
             "contents": [{"role": "user", "parts": [{"text": (
-                "Which of these markets does the question ask about: NVDA, TSLA, QQQ? "
-                "If it names none or says all, return all three. Reply JSON {\"markets\": [..]}.\n\nQuestion: " + q[:500])}]}],
+                "Read a trader's question about a trading agent. Which markets does it ask about "
+                "(NVDA, TSLA, QQQ; none named or 'all' means all three)? Does it restrict trading "
+                "hours: only while the US stock exchange is closed (\"us_closed\"), only while it "
+                "is open (\"us_open\"), or no restriction (\"all\")? Reply JSON "
+                "{\"markets\": [..], \"hours\": \"all\"|\"us_closed\"|\"us_open\"}.\n\nQuestion: " + q[:500])}]}],
             "generationConfig": {"responseMimeType": "application/json", "thinkingConfig": {"thinkingBudget": 0}},
         }
         req = urllib.request.Request(
@@ -39,10 +42,35 @@ def parse_question(q: str) -> dict:
             headers={"x-goog-api-key": os.environ["GEMINI_API_KEY"], "Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=8) as r:
             text = json.load(r)["candidates"][0]["content"]["parts"][0]["text"]
-        mk = [TICKERS[x] for x in json.loads(text).get("markets", []) if x in TICKERS]
-        return {"symbols": [s for s in C.SYMBOLS if s in mk] or list(C.SYMBOLS), "parser": "llm"}
+        obj = json.loads(text)
+        mk = [TICKERS[x] for x in obj.get("markets", []) if x in TICKERS]
+        hours = obj.get("hours") if obj.get("hours") in HOURS else "all"
+        return {"symbols": [s for s in C.SYMBOLS if s in mk] or list(C.SYMBOLS), "hours": hours, "parser": "llm"}
     except Exception:
-        return {"symbols": [s for s in C.SYMBOLS if s in found] or list(C.SYMBOLS), "parser": "keywords"}
+        return {"symbols": [s for s in C.SYMBOLS if s in found] or list(C.SYMBOLS),
+                "hours": keyword_hours(q), "parser": "keywords"}
+
+
+HOURS = ("all", "us_closed", "us_open")
+
+
+def keyword_hours(q: str) -> str:
+    ql = q.lower()
+    if re.search(r"(market|exchange|us)\W+(is\W+)?closed|after[- ]hours|overnight|weekend", ql):
+        return "us_closed"
+    if re.search(r"(market|exchange|us)\W+(is\W+)?open|regular (hours|session)", ql):
+        return "us_open"
+    return "all"
+
+
+def restrict_hours(pos: np.ndarray, m: E.Market, hours: str) -> np.ndarray:
+    """Zero every position decided at a bar close outside the allowed hours."""
+    if hours == "all":
+        return pos
+    from .agent import us_closed
+    closed = np.array([us_closed(int(t) + C.BAR_MS) for t in m.times])
+    keep = closed if hours == "us_closed" else ~closed
+    return pos * keep[None, :]
 
 
 def reference_runs() -> list[np.ndarray]:
@@ -123,7 +151,8 @@ def run(question: str, csv_text: str | None) -> dict:
         keep = [C.SYMBOLS.index(s) for s in q["symbols"]]
         runs, invalid, who = [r[keep] for r in all_runs], ref["invalid_outputs"], "reference"
         samples = [d for d in ref.get("sample_decisions", []) if d["symbol"] in q["symbols"]]
+    runs = [restrict_hours(r, m, q["hours"]) for r in runs]
     res = E.evaluate(runs, m, invalid=invalid)
-    res.update({"agent_source": who, "parser": q["parser"], "mood": market_mood(),
+    res.update({"agent_source": who, "parser": q["parser"], "hours": q["hours"], "mood": market_mood(),
                 "sample_decisions": [] if csv_text else samples})
     return res

@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from placebo import engine as E
@@ -27,3 +28,19 @@ def test_csv_rejections_are_readable(text, msg):
 def test_csv_size_limit():
     with pytest.raises(S.UserError, match="1 MB"):
         S.parse_csv("time,symbol,position\n" + "x" * 1_000_001, E.load_market())
+
+
+def test_keyword_hours():
+    assert S.keyword_hours("What if it only trades while the US market is closed?") == "us_closed"
+    assert S.keyword_hours("only over the weekend") == "us_closed"
+    assert S.keyword_hours("during regular hours only") == "us_open"
+    assert S.keyword_hours("Should I let it trade NVDA?") == "all"
+
+
+def test_restrict_hours_zeroes_outside_positions():
+    m = E.load_market()
+    pos = np.ones(m.rets.shape)
+    closed = S.restrict_hours(pos, m, "us_closed")
+    opened = S.restrict_hours(pos, m, "us_open")
+    assert np.array_equal(closed + opened, pos)
+    assert 0 < closed.sum() < pos.sum()
