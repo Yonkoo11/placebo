@@ -1,0 +1,32 @@
+"""Every value the engine uses. Copied from ai/PRODUCT-BRIEF.md section 5 (Engine)."""
+from datetime import datetime, timezone
+
+SYMBOLS = ["NVDAUSDT", "TSLAUSDT", "QQQUSDT"]
+ALIASES = {"NVDAUSDT": "Asset A", "TSLAUSDT": "Asset B", "QQQUSDT": "Asset C"}
+GRANULARITY = "4H"
+BAR_MS = 4 * 3600 * 1000
+WINDOW_START = datetime(2026, 7, 1, tzinfo=timezone.utc)
+WINDOW_END = datetime(2026, 9, 26, 20, tzinfo=timezone.utc)  # last bar open included
+BARS_PER_YEAR = 2190
+TAKER_FEE = 0.0006
+SLIPPAGE = 0.0002  # assumption, labelled in the report
+AGENT_MODEL = "gemini-3.1-flash-lite"  # version 3.1-flash-lite-05-2026, before the window
+AGENT_FALLBACK_MODEL = None  # every later Gemini release postdates 2026-07-01; no fallback that keeps the window clean
+PARSER_MODEL = "gemini-3.1-flash-lite"
+AGENT_RUNS = 3
+LOOKBACK_RETURNS = 12
+VOL_WINDOW = 30
+LLM_RPM = 14  # free Gemini tier cap is 15 per minute per model (429 body, 2026-09-27)
+LLM_TIMEOUT_S = 30
+LLM_RETRIES = 2
+PLACEBO_DRAWS = 2000
+PLACEBO_SEED = 7
+RULE_LOOKBACK = 6
+MAX_CSV_BYTES = 1_000_000
+
+VERDICT_DEPLOY = "DEPLOY"
+VERDICT_HALF = "HALF SIZE"
+VERDICT_NO = "DO NOT DEPLOY"
+
+BITGET = "https://api.bitget.com"
+PRODUCT_TYPE = "USDT-FUTURES"

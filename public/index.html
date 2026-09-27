@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Placebo — does your trading agent beat its placebo twin?</title>
+<meta name="description" content="A placebo-controlled trial for LLM trading agents on Bitget's 24/7 tokenized-stock perps.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FAFAF7; --surface: #FFFFFF; --ink: #1A1A1A; --muted: #6B6B6B; --rule: #E4E2DC;
+  --agent: #C2410C; --placebo: #A8A29E;
+  --v-deploy: #15803D; --v-half: #B45309; --v-no: #B91C1C;
+  --radius-control: 6px; --radius-card: 10px;
+  --shadow-card: 0 1px 2px rgba(26,26,26,.05), 0 6px 20px rgba(26,26,26,.06);
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif; --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --text-body: 16px; --text-small: 14px; --text-title: clamp(24px, 4.2vw, 28px);
+  --ease-out: cubic-bezier(.2,.7,.2,1);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121212; --surface: #1A1A1A; --ink: #EDEDED; --muted: #9A9A9A; --rule: #2A2A2A;
+    --agent: #FB923C; --placebo: #57534E;
+    --v-deploy: #4ADE80; --v-half: #FBBF24; --v-no: #F87171;
+    --shadow-card: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121212; --surface: #1A1A1A; --ink: #EDEDED; --muted: #9A9A9A; --rule: #2A2A2A;
+  --agent: #FB923C; --placebo: #57534E;
+  --v-deploy: #4ADE80; --v-half: #FBBF24; --v-no: #F87171;
+  --shadow-card: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 var(--text-body)/1.55 var(--font-sans); }
+main { max-width: 760px; margin: 0 auto; padding: 56px 24px 80px; }
+@media (max-width: 480px) { main { padding: 32px 16px 64px; } }
+
+.coin { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--ink);
+        background: linear-gradient(90deg, var(--ink) 50%, transparent 50%); vertical-align: 2px; }
+.kicker { font: 500 var(--text-small)/1 var(--font-mono); color: var(--muted); display: flex; gap: 8px; align-items: center; margin: 0 0 20px; }
+h1 { font-size: var(--text-title); line-height: 1.2; letter-spacing: -0.015em; font-weight: 600; margin: 0 0 14px; }
+h1 .payoff { color: var(--agent); }
+.lede { color: var(--muted); margin: 0 0 36px; max-width: 62ch; }
+
+form { display: grid; gap: 12px; margin-bottom: 28px; }
+label.q { font-weight: 500; }
+input[type=text] { width: 100%; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--rule);
+  border-radius: var(--radius-control); padding: 12px 14px; box-shadow: inset 0 1px 1px rgba(0,0,0,.03); }
+.file { font-size: var(--text-small); color: var(--muted); display: grid; gap: 6px; }
+.file input { font: inherit; color: var(--muted); max-width: 100%; }
+button { justify-self: start; font: 500 var(--text-body)/1 var(--font-sans); color: var(--bg); background: var(--ink); border: 0;
+  border-radius: var(--radius-control); padding: 13px 20px; cursor: pointer;
+  transition: transform 150ms var(--ease-out), box-shadow 150ms var(--ease-out); }
+button:disabled { opacity: .55; cursor: progress; }
+@media (hover: hover) { button:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.18); } }
+:focus-visible { outline: 2px solid var(--agent); outline-offset: 2px; }
+
+.status { font-size: var(--text-small); color: var(--muted); min-height: 1.5em; }
+.status.error { color: var(--v-no); }
+
+.answer { background: var(--surface); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: 24px; margin-bottom: 40px; opacity: 0; }
+.answer.show { opacity: 1; transition: opacity 200ms var(--ease-out); }
+.answer[hidden] { display: none; }
+.verdict { font-size: 20px; line-height: 1.35; font-weight: 600; margin: 0 0 6px; }
+.verdict .tag { font: 500 12px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; display: inline-block; margin-bottom: 10px; }
+.pline, .num { font-family: var(--font-mono); font-size: var(--text-small); }
+.pline { color: var(--muted); margin: 0 0 18px; }
+figure { margin: 0 0 18px; }
+figcaption { font-size: var(--text-small); color: var(--muted); display: flex; gap: 16px; flex-wrap: wrap; margin-top: 6px; }
+.key { display: inline-flex; gap: 6px; align-items: center; }
+.swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+svg { width: 100%; height: auto; display: block; }
+.table-wrap { overflow-x: auto; margin: 0 0 18px; }
+table { border-collapse: collapse; width: 100%; font-size: var(--text-small); }
+th, td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-weight: 500; color: var(--muted); }
+td { font-family: var(--font-mono); }
+tr.agent td:first-child { color: var(--agent); font-weight: 500; }
+.reasons { list-style: none; padding: 0; margin: 0 0 18px; font-size: var(--text-small); }
+.reasons li { padding: 8px 0; border-bottom: 1px solid var(--rule); }
+.reasons .num { color: var(--muted); margin-right: 8px; }
+.mood { font-size: var(--text-small); color: var(--muted); margin: 0 0 12px; }
+.call { font-weight: 500; margin: 0; }
+
+h2 { font-size: 18px; font-weight: 600; margin: 0 0 12px; letter-spacing: -0.005em; }
+section { margin-top: 44px; }
+.method p { margin: 0 0 12px; max-width: 64ch; }
+.limits ol { margin: 0; padding-left: 22px; max-width: 64ch; }
+.limits li { margin-bottom: 10px; }
+footer { margin-top: 56px; font-size: var(--text-small); color: var(--muted); border-top: 1px solid var(--rule); padding-top: 18px; }
+footer a, .method a { color: inherit; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0ms !important; animation: none !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+<main>
+  <p class="kicker"><span class="coin" aria-hidden="true"></span>Placebo · Bitget AI Hackathon S2</p>
+  <h1>Does your trading agent beat its <span class="payoff">placebo twin?</span></h1>
+  <p class="lede">Your agent trades. Its twin copies every entry, exit and size, then flips a coin for direction. If your agent can't beat 2,000 coin-flip twins on Bitget's 24/7 stock perps, it has no edge yet.</p>
+
+  <form id="f" novalidate>
+    <label class="q" for="q">Ask</label>
+    <input id="q" type="text" value="Should I let the reference agent trade NVDA, TSLA and QQQ?" autocomplete="off" maxlength="500">
+    <label class="file">Or test your own agent: upload positions (time,symbol,position)
+      <input id="csv" type="file" accept=".csv,text/csv">
+    </label>
+    <button id="run" type="submit">Run the trial</button>
+    <p id="status" class="status" role="status" aria-live="polite">Ask a question to run the trial. Data: Bitget USDT-M perps, 4-hour bars, 1 Jul – 26 Sep 2026.</p>
+  </form>
+
+  <article id="answer" class="answer" hidden aria-live="polite">
+    <p class="verdict"><span class="tag" id="tag"></span><br><span id="vtext"></span></p>
+    <p class="pline" id="pline"></p>
+    <figure>
+      <svg id="hist" viewBox="0 0 720 180" role="img" aria-label="Distribution of placebo twin Sharpe ratios with the agent's Sharpe marked"></svg>
+      <figcaption>
+        <span class="key"><span class="coin" aria-hidden="true"></span>2,000 placebo twins (Sharpe)</span>
+        <span class="key"><span class="swatch" style="background:var(--agent)"></span>your agent</span>
+      </figcaption>
+    </figure>
+    <div class="table-wrap"><table id="arms"></table></div>
+    <ul class="reasons" id="reasons"></ul>
+    <p class="mood" id="mood"></p>
+    <p class="call">Your call. Placebo tells you what the numbers say; you decide what runs.</p>
+  </article>
+
+  <section class="method">
+    <h2>How the trial works</h2>
+    <p>The reference agent is Gemini 3.1 Flash Lite (released May 2026). Every 4 hours it sets a long, flat or short position in three Bitget USDT-M perps: NVDAUSDT, TSLAUSDT and QQQUSDT. It sees the last twelve 4-hour returns, recent volatility, whether the US exchange is closed, and its own position. It never sees a ticker or a date. It was run three times.</p>
+    <p>Each twin keeps the agent's exact timing and size and redraws the direction of every holding at random. Every arm pays Bitget's 0.06% taker fee, an assumed 0.02% slippage and Bitget's recorded funding. The verdict rule was fixed before any run: deploy only if the agent beats 95% of twins in every run, beats a simple momentum rule, agrees with itself on at least 80% of decisions, and never draws down more than 20%.</p>
+    <p><a href="/report.json">Raw report (JSON)</a> · <a href="https://github.com/yonkoo11/placebo">Code and data</a></p>
+  </section>
+
+  <section class="limits">
+    <h2>What this does not tell you</h2>
+    <ol>
+      <li>88 days is short. A “do not deploy” can mean “not proven yet”.</li>
+      <li>Past bars only. Live fills, funding changes and outages are not in this test.</li>
+      <li>Results are for these three markets and this window. Different markets need a new trial.</li>
+      <li>The LLM saw no tickers or dates, and its release predates the window, but hiding names cannot hide every pattern.</li>
+    </ol>
+  </section>
+
+  <footer>Placebo runs on Bitget's public market data. It places no orders.</footer>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const VERDICT = {
+  "DEPLOY": ["Deploy", "--v-deploy", (p, c) => `Deploy. It beat ${p}% of its placebo twins, beat the momentum rule, and agreed with itself ${c}% of the time.`],
+  "HALF SIZE": ["Half size", "--v-half", (p) => `Half size at most. Better than ${p}% of placebo twins, which is suggestive, not proof.`],
+  "DO NOT DEPLOY": ["Do not deploy", "--v-no", (p) => `Do not deploy. It beat only ${p}% of its placebo twins. A coin flip with the same timing does about as well.`],
+};
+const pct = (x) => (x * 100).toFixed(1) + "%";
+const fmt = (x, d = 2) => (x == null ? "–" : x.toFixed(d));
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function drawHist(pl) {
+  const svg = $("hist"), W = 720, H = 180, pad = 24, n = pl.histogram.length;
+  const max = Math.max(...pl.histogram), lo = pl.bin_edges[0], hi = pl.bin_edges[n];
+  const x = (v) => pad + ((v - lo) / (hi - lo)) * (W - 2 * pad);
+  const bw = (W - 2 * pad) / n;
+  let out = pl.histogram.map((c, i) => {
+    const h = (c / max) * (H - 44);
+    return `<rect x="${(pad + i * bw + 1).toFixed(1)}" y="${(H - 24 - h).toFixed(1)}" width="${(bw - 2).toFixed(1)}" height="${h.toFixed(1)}" fill="var(--placebo)" rx="1"/>`;
+  }).join("");
+  const ax = Math.min(W - pad, Math.max(pad, x(pl.agent_sharpe)));
+  out += `<line x1="${pad}" x2="${W - pad}" y1="${H - 24}" y2="${H - 24}" stroke="var(--rule)"/>`;
+  out += `<line x1="${ax}" x2="${ax}" y1="8" y2="${H - 24}" stroke="var(--agent)" stroke-width="2"/>`;
+  out += `<text x="${ax + (ax > W - 140 ? -6 : 6)}" y="20" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--agent)" text-anchor="${ax > W - 140 ? "end" : "start"}">agent ${fmt(pl.agent_sharpe)}</text>`;
+  out += `<text x="${pad}" y="${H - 6}" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--muted)">${fmt(lo)}</text>`;
+  out += `<text x="${W - pad}" y="${H - 6}" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--muted)" text-anchor="end">${fmt(hi)}</text>`;
+  svg.innerHTML = out;
+}
+
+function render(r) {
+  const [tag, color, text] = VERDICT[r.verdict];
+  const p = Math.round(r.placebo.percentile), c = r.consistency == null ? null : Math.round(r.consistency * 100);
+  $("tag").textContent = tag; $("tag").style.color = `var(${color})`;
+  $("vtext").textContent = text(p, c);
+  $("pline").textContent = `p = ${r.placebo.p_value.toFixed(3)} against 2,000 placebo twins (one-sided).` +
+    (r.p_values_per_run.length > 1 ? ` Worst of ${r.p_values_per_run.length} runs; consistency ${c}%.` : " One run: consistency needs 2+ runs.");
+  drawHist(r.placebo);
+  const names = { agent: r.agent_source === "uploaded" ? "your agent" : "reference agent", rule: "momentum rule", hold: "buy and hold" };
+  $("arms").innerHTML = `<tr><th>arm</th><th>Sharpe</th><th>return</th><th>max DD</th><th>win</th><th>trades/day</th><th>costs</th></tr>` +
+    Object.entries(r.arms).map(([k, v]) => `<tr class="${k}"><td>${names[k]}</td><td>${fmt(v.sharpe)}</td><td>${pct(v.total_return)}</td><td>${pct(v.max_drawdown)}</td><td>${Math.round(v.win_rate * 100)}%</td><td>${fmt(v.turnover_per_day)}</td><td>${pct(v.costs_paid)}</td></tr>`).join("");
+  $("reasons").innerHTML = (r.sample_decisions || []).map((d) =>
+    `<li><span class="num">${new Date(d.t).toISOString().slice(5, 16).replace("T", " ")} ${esc(d.symbol)} ${d.position > 0 ? "long" : "short"}</span>${esc(d.reason)}</li>`).join("");
+  $("mood").textContent = r.mood && !r.mood.ok ? `Bitget data service unavailable (HTTP ${r.mood.code}). Market mood not shown.` : "";
+  const a = $("answer"); a.hidden = false; a.classList.remove("show"); void a.offsetWidth; a.classList.add("show");
+}
+
+$("f").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = $("run"), st = $("status"), label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Running…";
+  st.className = "status"; st.textContent = "Replaying 528 bars per market against 2,000 placebo twins…";
+  try {
+    const file = $("csv").files[0];
+    if (file && file.size > 1_000_000) throw new Error("the CSV is larger than 1 MB");
+    const body = { question: $("q").value, csv: file ? await file.text() : null };
+    const res = await fetch("/api/trial", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const data = await res.json().catch(() => ({ error: `server returned ${res.status}` }));
+    if (!res.ok || data.error) throw new Error(data.error || `server returned ${res.status}`);
+    render(data);
+    st.textContent = data.parser === "keywords" ? "Question read by keyword match (the language model was unavailable)." : "";
+  } catch (err) {
+    st.className = "status error";
+    st.textContent = `The trial did not run: ${err.message}. Nothing was changed. Try again, or check the CSV format.`;
+  } finally {
+    btn.disabled = false; btn.textContent = label;
+  }
+});
+</script>
+</body>
+</html>

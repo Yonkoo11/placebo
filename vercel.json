@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "api/trial.py": {
+      "maxDuration": 30,
+      "includeFiles": "{placebo/**,data/candles_*,data/funding_*,data/snapshot.json,data/reference_positions.json}"
+    }
+  }
+}

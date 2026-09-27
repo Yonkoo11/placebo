@@ -48,3 +48,6 @@ deployments/local-*.json
 # Internal planning / working notes — never published. Public docs go in docs/.
 ai/
 .private/
+__pycache__/
+out/rule_positions.csv
+.vercel

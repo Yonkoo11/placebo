@@ -1,0 +1,33 @@
+{
+ "fetched_at": 1790493336925,
+ "source": "https://api.bitget.com",
+ "symbols": {
+  "NVDAUSDT": {
+   "bars": 528,
+   "fees": {
+    "taker": 0.0006,
+    "maker": 0.0002
+   },
+   "funding_events": 264,
+   "nonzero_funding": 49
+  },
+  "TSLAUSDT": {
+   "bars": 528,
+   "fees": {
+    "taker": 0.0006,
+    "maker": 0.0002
+   },
+   "funding_events": 264,
+   "nonzero_funding": 45
+  },
+  "QQQUSDT": {
+   "bars": 528,
+   "fees": {
+    "taker": 0.0006,
+    "maker": 0.0002
+   },
+   "funding_events": 264,
+   "nonzero_funding": 89
+  }
+ }
+}
