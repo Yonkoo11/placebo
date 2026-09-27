@@ -1,0 +1,50 @@
+# Secrets — never commit
+.env
+.env.*
+.envrc
+*.key
+*.pem
+keystore/
+secrets/
+.private/
+
+# Foundry artifacts (broadcast/ contains tx data with deployer addresses; review before publishing)
+contracts/cache/
+contracts/out/
+contracts/broadcast/
+contracts/.gas-snapshot
+
+# Hardhat (if used)
+artifacts/
+cache_hardhat/
+
+# Anchor / Solana (if used)
+.anchor/
+target/
+test-ledger/
+
+# Node / Next
+node_modules/
+.next/
+dist/
+.turbo/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local deployment artifacts that may carry operator addresses
+deployments/local-*.json
+
+# Internal planning / working notes — never published. Public docs go in docs/.
+ai/
+.private/
