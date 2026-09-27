@@ -213,8 +213,22 @@ footer p { max-width: 70ch; margin: 0 0 var(--s3); }
 const $ = (id) => document.getElementById(id);
 const pct = (x) => (x * 100).toFixed(1) + "%";
 const f2 = (x) => (x == null ? "–" : x.toFixed(2));
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const when = (t) => new Date(t).toISOString().slice(5, 16).replace("T", " ");
+const SVG = "http://www.w3.org/2000/svg";
+// Build DOM nodes; text always goes in through textContent, never parsed as HTML.
+function h(tag, attrs = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) k === "style" ? Object.assign(el.style, v) : el.setAttribute(k, v);
+  for (const c of kids.flat()) el.append(c instanceof Node ? c : document.createTextNode(String(c)));
+  return el;
+}
+function s(tag, attrs = {}, text) {
+  const el = document.createElementNS(SVG, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  if (text != null) el.textContent = text;
+  return el;
+}
+const MONO = { "font-family": "IBM Plex Mono, monospace", "font-size": "13" };
 const VERDICT = {
   "DEPLOY": (p, c) => `Deploy. It beat ${p}% of its placebo twins, beat the momentum rule, and agreed with itself ${c}% of the time.`,
   "HALF SIZE": (p) => `Half size at most. Better than ${p}% of placebo twins, which is suggestive, not proof.`,
@@ -233,31 +247,41 @@ function drawField(pl) {
   const maxRows = Math.ceil(Math.max(...pl.histogram) / perCol), H = maxRows * step + 44;
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   const lo = pl.bin_edges[0], hi = pl.bin_edges[n], x = (v) => ((v - lo) / (hi - lo)) * W;
-  let out = "", seen = 0;
+  const nodes = [];
+  let seen = 0;
   const beaten = Math.round(pl.percentile * 20);  // twins with a lower Sharpe than the agent, of 2,000
   pl.histogram.forEach((c, i) => {
     for (let k = 0; k < c; k++) {
-      const beat = seen++ < beaten;
-      const col = k % perCol, row = Math.floor(k / perCol);
-      out += `<circle cx="${(i * bw + 2 + col * (bw - 4) / Math.max(1, perCol - 1)).toFixed(1)}" cy="${(H - 22 - row * step).toFixed(1)}" r="${r}" fill="var(${beat ? "--dot-beat" : "--null"})"/>`;
+      const beat = seen++ < beaten, col = k % perCol, row = Math.floor(k / perCol);
+      nodes.push(s("circle", { cx: (i * bw + 2 + col * (bw - 4) / Math.max(1, perCol - 1)).toFixed(1), cy: (H - 22 - row * step).toFixed(1), r, fill: `var(${beat ? "--dot-beat" : "--null"})` }));
     }
   });
   const ax = Math.min(W - 1, Math.max(1, x(pl.agent_sharpe))), right = ax > W - 120;
-  out += `<line x1="${ax}" x2="${ax}" y1="14" y2="${H - 18}" stroke="var(--accent)" stroke-width="2"/>`;
-  out += `<text x="${ax + (right ? -6 : 6)}" y="12" font-family="IBM Plex Mono, monospace" font-size="13" fill="var(--accent)" text-anchor="${right ? "end" : "start"}">agent ${f2(pl.agent_sharpe)}</text>`;
-  if (lo < 0 && hi > 0) out += `<line x1="${x(0)}" x2="${x(0)}" y1="${H - 18}" y2="${H - 12}" stroke="var(--muted)"/><text x="${x(0)}" y="${H - 2}" font-family="IBM Plex Mono, monospace" font-size="13" fill="var(--muted)" text-anchor="middle">0</text>`;
-  out += `<text x="0" y="${H - 2}" font-family="IBM Plex Mono, monospace" font-size="13" fill="var(--muted)">${f2(lo)}</text>`;
-  out += `<text x="${W}" y="${H - 2}" font-family="IBM Plex Mono, monospace" font-size="13" fill="var(--muted)" text-anchor="end">${f2(hi)}</text>`;
-  svg.innerHTML = out;
+  nodes.push(s("line", { x1: ax, x2: ax, y1: 14, y2: H - 18, stroke: "var(--accent)", "stroke-width": 2 }));
+  nodes.push(s("text", { ...MONO, x: ax + (right ? -6 : 6), y: 12, fill: "var(--accent)", "text-anchor": right ? "end" : "start" }, `agent ${f2(pl.agent_sharpe)}`));
+  if (lo < 0 && hi > 0) {
+    nodes.push(s("line", { x1: x(0), x2: x(0), y1: H - 18, y2: H - 12, stroke: "var(--muted)" }));
+    nodes.push(s("text", { ...MONO, x: x(0), y: H - 2, fill: "var(--muted)", "text-anchor": "middle" }, "0"));
+  }
+  nodes.push(s("text", { ...MONO, x: 0, y: H - 2, fill: "var(--muted)" }, f2(lo)));
+  nodes.push(s("text", { ...MONO, x: W, y: H - 2, fill: "var(--muted)", "text-anchor": "end" }, f2(hi)));
+  svg.replaceChildren(...nodes);
 }
 
 function drawForest(F) {
   const names = { all: "All hours", us_closed: "US market closed", us_open: "US market open" };
   const vals = Object.values(F).flatMap((q) => [q.p05, q.p95, q.agent_sharpe]);
   const lo = Math.min(...vals) - 0.5, hi = Math.max(...vals) + 0.5, x = (v) => ((v - lo) / (hi - lo)) * 100 + "%";
-  $("forest").innerHTML = Object.entries(F).map(([k, q]) =>
-    `<div>${names[k]}</div><div class="track"><i class="band" style="left:${x(q.p05)};width:calc(${x(q.p95)} - ${x(q.p05)})"></i><i class="cap" style="left:${x(q.p05)}"></i><i class="cap" style="left:${x(q.p95)}"></i><i class="mid" style="left:${x(q.mean)}"></i><i class="est" style="left:${x(q.agent_sharpe)}"></i></div><div class="num">${Math.round(q.percentile)}%</div>`
-  ).join("") + `<div></div><div class="axis"><span>${f2(lo)}</span><span>Sharpe</span><span>${f2(hi)}</span></div><div></div>`;
+  const cells = Object.entries(F).flatMap(([k, q]) => [
+    h("div", {}, names[k] || k),
+    h("div", { class: "track" },
+      h("i", { class: "band", style: { left: x(q.p05), width: `calc(${x(q.p95)} - ${x(q.p05)})` } }),
+      h("i", { class: "cap", style: { left: x(q.p05) } }), h("i", { class: "cap", style: { left: x(q.p95) } }),
+      h("i", { class: "mid", style: { left: x(q.mean) } }), h("i", { class: "est", style: { left: x(q.agent_sharpe) } })),
+    h("div", { class: "num" }, `${Math.round(q.percentile)}%`),
+  ]);
+  cells.push(h("div"), h("div", { class: "axis" }, h("span", {}, f2(lo)), h("span", {}, "Sharpe"), h("span", {}, f2(hi))), h("div"));
+  $("forest").replaceChildren(...cells);
 }
 
 function render(r, opts = {}) {
@@ -265,8 +289,11 @@ function render(r, opts = {}) {
   const pl = r.placebo, p = Math.round(pl.percentile), c = r.consistency == null ? null : Math.round(r.consistency * 100);
   const [word, colour] = state(pl.p_value);
   $("tag").textContent = word; $("tag").style.color = `var(${colour})`;
-  $("whisker").innerHTML = `<line x1="1" x2="27" y1="6" y2="6" stroke="var(${colour})" stroke-width="1.5"/><line x1="1" x2="1" y1="2" y2="10" stroke="var(${colour})" stroke-width="1.5"/><line x1="27" x2="27" y1="2" y2="10" stroke="var(${colour})" stroke-width="1.5"/><rect x="10" y="2" width="8" height="8" fill="var(--accent)"/>`;
-  $("vtext").textContent = VERDICT[r.verdict](p, c);
+  const w = { stroke: `var(${colour})`, "stroke-width": 1.5 };
+  $("whisker").replaceChildren(
+    s("line", { ...w, x1: 1, x2: 27, y1: 6, y2: 6 }), s("line", { ...w, x1: 1, x2: 1, y1: 2, y2: 10 }),
+    s("line", { ...w, x1: 27, x2: 27, y1: 2, y2: 10 }), s("rect", { x: 10, y: 2, width: 8, height: 8, fill: "var(--accent)" }));
+  $("vtext").textContent = (VERDICT[r.verdict] || VERDICT["DO NOT DEPLOY"])(p, c);
   let line = `p = ${pl.p_value.toFixed(3)} against 2,000 placebo twins (one-sided).` +
     (r.p_values_per_run.length > 1 ? ` Worst of ${r.p_values_per_run.length} runs; consistency ${c}%.` : " One run: consistency needs 2+ runs.");
   if (r.hours && r.hours !== "all") line += ` Positions kept only while the US exchange is ${r.hours === "us_closed" ? "closed" : "open"}.`;
@@ -275,26 +302,29 @@ function render(r, opts = {}) {
   $("forestfig").hidden = !opts.forest;
   drawField(pl);
   const names = { agent: r.agent_source === "uploaded" ? "your agent" : "reference agent", rule: "momentum rule", hold: "buy and hold" };
-  $("arms").innerHTML = `<tr><th>arm</th><th>Sharpe</th><th>return</th><th>max DD</th><th>win</th><th>trades/day</th><th>costs</th></tr>` +
-    Object.entries(r.arms).map(([k, v]) => `<tr class="${k}"><td>${names[k]}</td><td>${f2(v.sharpe)}</td><td>${pct(v.total_return)}</td><td>${pct(v.max_drawdown)}</td><td>${Math.round(v.win_rate * 100)}%</td><td>${f2(v.turnover_per_day)}</td><td>${pct(v.costs_paid)}</td></tr>`).join("");
+  $("arms").replaceChildren(
+    h("tr", {}, ["arm", "Sharpe", "return", "max DD", "win", "trades/day", "costs"].map((t) => h("th", {}, t))),
+    ...Object.entries(r.arms).map(([k, v]) => h("tr", { class: k },
+      [names[k] || k, f2(v.sharpe), pct(v.total_return), pct(v.max_drawdown), `${Math.round(v.win_rate * 100)}%`, f2(v.turnover_per_day), pct(v.costs_paid)].map((t) => h("td", {}, t)))));
   $("mood").textContent = r.mood && !r.mood.ok ? `Bitget data service unavailable (HTTP ${r.mood.code}). Market mood not shown.` : "";
-  const s = $("sheet"); s.classList.remove("shown"); s.classList.add("enter"); void s.offsetWidth; s.classList.replace("enter", "shown");
+  const sh = $("sheet"); sh.classList.remove("shown"); sh.classList.add("enter"); void sh.offsetWidth; sh.classList.replace("enter", "shown");
 }
 
+const side = (x) => (x > 0 ? "long" : x < 0 ? "short" : "flat");
+const row = (a, b, c, d, e) => h("div", { class: "row" }, h("span", { class: "m" }, a), h("span", { class: "m" }, b), h("span", { class: "m" }, c), h("span", {}, d), h("span", { class: "r" }, e));
 let D = [], filter = "ALL", shown = 40;
 function drawRows() {
   const list = filter === "ALL" ? D : D.filter((d) => d.symbol.startsWith(filter));
   $("dcount").textContent = `${list.length.toLocaleString("en")} decisions by Claude Haiku 4.5 over 2 runs. Showing ${Math.min(shown, list.length)}.`;
-  $("rows").innerHTML = list.slice(0, shown).map((d) =>
-    `<div class="row"><span class="m">${when(d.t)}</span><span class="m">run ${d.run + 1}</span><span class="m">${esc(d.symbol)}</span><span>${d.position > 0 ? "long" : d.position < 0 ? "short" : "flat"}</span><span class="r">${esc(d.reason)}</span></div>`).join("");
+  $("rows").replaceChildren(...list.slice(0, shown).map((d) => row(when(d.t), `run ${d.run + 1}`, d.symbol, side(d.position), d.reason)));
   $("more").hidden = shown >= list.length;
 }
 $("more").addEventListener("click", () => { shown += 40; drawRows(); });
-$("filters").innerHTML = ["ALL", "NVDA", "TSLA", "QQQ"].map((k) => `<button type="button" class="chip" aria-pressed="${k === "ALL"}" data-k="${k}">${k === "ALL" ? "All" : k}</button>`).join("");
+$("filters").replaceChildren(...["ALL", "NVDA", "TSLA", "QQQ"].map((k) => h("button", { type: "button", class: "chip", "aria-pressed": String(k === "ALL"), "data-k": k }, k === "ALL" ? "All" : k)));
 $("filters").addEventListener("click", (e) => {
   const b = e.target.closest(".chip"); if (!b) return;
   filter = b.dataset.k; shown = 40;
-  document.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", c === b));
+  document.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c === b)));
   drawRows();
 });
 
@@ -308,12 +338,13 @@ async function load() {
     const d = await fetch("/decisions.json").then((r) => r.json());
     D = d.decisions; drawRows();
   } catch (e) { $("dcount").textContent = "The decision log did not load. The raw file is at /decisions.json."; }
+  const empty = () => $("paperrows").replaceChildren(h("p", { class: "note" }, "No paper steps yet."));
   try {
     const p = await fetch("/paper.json").then((r) => r.json());
-    $("paperrows").innerHTML = p.length ? p.slice().reverse().flatMap((row) => Object.keys(row.positions).map((s) =>
-      `<div class="row"><span class="m">${when(row.bar + 4 * 3600e3)}</span><span class="m">${esc(row.source)}</span><span class="m">${esc(s)} ${row.prices[s]}</span><span>${row.positions[s] > 0 ? "long" : row.positions[s] < 0 ? "short" : "flat"}</span><span class="r">${esc(row.reasons[s] || "")}</span></div>`)).join("")
-      : `<p class="note">No paper steps yet.</p>`;
-  } catch (e) { $("paperrows").innerHTML = `<p class="note">No paper steps yet.</p>`; }
+    if (!p.length) return empty();
+    $("paperrows").replaceChildren(...p.slice().reverse().flatMap((st) => Object.keys(st.positions).map((sym) =>
+      row(when(st.bar + 4 * 3600e3), st.source, `${sym} ${st.prices[sym]}`, side(st.positions[sym]), st.reasons[sym] || ""))));
+  } catch (e) { empty(); }
 }
 load();
 
