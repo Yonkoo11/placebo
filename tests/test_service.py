@@ -26,8 +26,8 @@ def test_csv_run_column_gives_one_run_per_value():
 def test_csv_too_many_runs_is_readable():
     m = E.load_market()
     t0 = int(m.times[10])
-    text = "time,symbol,position,run\n" + "".join(f"{t0},NVDA,1,{i}\n" for i in range(9))
-    with pytest.raises(S.UserError, match="at most 8 runs"):
+    text = "time,symbol,position,run\n" + "".join(f"{t0},NVDA,1,{i}\n" for i in range(5))
+    with pytest.raises(S.UserError, match="at most 4 runs"):
         S.parse_csv(text, m)
 
 

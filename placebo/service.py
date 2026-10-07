@@ -111,13 +111,14 @@ def parse_csv(text: str, m: E.Market) -> list[np.ndarray]:
         if p not in (-1.0, 0.0, 1.0):
             raise UserError(f"line {n}: position must be -1, 0 or 1")
         if sym in m.symbols and t in index:
-            pos = runs.setdefault(r.get("run", "") or "1", np.zeros(m.rets.shape))
+            key = r.get("run", "") or "1"
+            if key not in runs and len(runs) >= C.MAX_RUNS:
+                raise UserError(f"line {n}: at most {C.MAX_RUNS} runs (the run column has more values)")
+            pos = runs.setdefault(key, np.zeros(m.rets.shape))
             pos[m.symbols.index(sym), index[t]] = p
             matched += 1
     if matched == 0:
         raise UserError("no row matched a 4-hour bar open between 1 Jul and 26 Sep 2026 (UTC)")
-    if len(runs) > C.MAX_RUNS:
-        raise UserError(f"at most {C.MAX_RUNS} runs (the run column has {len(runs)} values)")
     return list(runs.values())
 
 
