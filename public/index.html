@@ -147,7 +147,7 @@ footer p { max-width: 70ch; margin: 0 0 var(--s3); }
       <label class="q" for="q">Ask</label>
       <input id="q" type="text" value="Should I let the reference agent trade NVDA, TSLA and QQQ?" autocomplete="off" maxlength="500">
       <p class="hint">Also try: “What if it only trades while the US market is closed?”</p>
-      <label class="file">Or test your own agent: upload positions (time,symbol,position)
+      <label class="file">Or test your own agent: upload positions (time,symbol,position, optional run: 2+ runs can reach DEPLOY, 1 run tops out at HALF SIZE)
         <input id="csv" type="file" accept=".csv,text/csv">
       </label>
       <button id="run" type="submit">Run the trial</button>
@@ -295,7 +295,7 @@ function render(r, opts = {}) {
     s("line", { ...w, x1: 27, x2: 27, y1: 2, y2: 10 }), s("rect", { x: 10, y: 2, width: 8, height: 8, fill: "var(--accent)" }));
   $("vtext").textContent = (VERDICT[r.verdict] || VERDICT["DO NOT DEPLOY"])(p, c);
   let line = `p = ${pl.p_value.toFixed(3)} against 2,000 placebo twins (one-sided).` +
-    (r.p_values_per_run.length > 1 ? ` Worst of ${r.p_values_per_run.length} runs; consistency ${c}%.` : " One run: consistency needs 2+ runs.");
+    (r.p_values_per_run.length > 1 ? ` Worst of ${r.p_values_per_run.length} runs; consistency ${c}%.` : " One run: consistency needs 2+ runs, so this upload tops out at HALF SIZE; add a run column to go for DEPLOY.");
   if (r.hours && r.hours !== "all") line += ` Positions kept only while the US exchange is ${r.hours === "us_closed" ? "closed" : "open"}.`;
   $("pline").textContent = line;
   $("example").hidden = !opts.example;

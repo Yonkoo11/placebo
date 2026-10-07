@@ -40,7 +40,7 @@ A trial for a trading agent, and a desk where a person asks whether to switch it
 
 </div>
 
-1. **Question.** Type it in plain English ("What if it only trades while the US market is closed?") or upload your agent's positions as `time,symbol,position`. A small model reads the question for markets and trading hours only.
+1. **Question.** Type it in plain English ("What if it only trades while the US market is closed?") or upload your agent's positions as `time,symbol,position` (add a `run` column with 2 or more values to be judged for DEPLOY; a single run can reach HALF SIZE at most, because consistency needs a second run). A small model reads the question for markets and trading hours only.
 2. **Replay.** Bitget USDT-M perps NVDAUSDT, TSLAUSDT and QQQUSDT, 4-hour bars from 1 Jul to 26 Sep 2026 (528 bars each). A decision at the close of a bar is held over the next bar. Every change pays Bitget's 0.06% taker fee plus 0.02% assumed slippage; funding comes from Bitget's history.
 3. **Twins.** Each twin keeps every holding's start, end and size, and redraws its direction at random. Costs are identical, so the only thing tested is direction.
 4. **Verdict.** Fixed before any run. **Deploy** if the agent beats 95% of twins in every run, beats a momentum rule, agrees with itself on 80%+ of decisions and never draws down more than 20%. **Half size** if it beats 80% and makes money. **Do not deploy** otherwise.

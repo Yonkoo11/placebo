@@ -31,3 +31,4 @@ VERDICT_NO = "DO NOT DEPLOY"
 
 BITGET = "https://api.bitget.com"
 PRODUCT_TYPE = "USDT-FUTURES"
+MAX_RUNS = 8            # uploaded CSV: distinct values of the run column

@@ -9,8 +9,26 @@ def test_csv_accepts_iso_ms_and_short_tickers():
     m = E.load_market()
     t0 = int(m.times[10])
     text = f"time,symbol,position\n{t0},NVDA,1\n2026-07-01T00:00:00Z,TSLAUSDT,-1\n"
-    pos = S.parse_csv(text, m)
-    assert pos[0, 10] == 1 and pos[1, 0] == -1 and abs(pos).sum() == 2
+    runs = S.parse_csv(text, m)
+    pos = runs[0]
+    assert len(runs) == 1 and pos[0, 10] == 1 and pos[1, 0] == -1 and abs(pos).sum() == 2
+
+
+def test_csv_run_column_gives_one_run_per_value():
+    m = E.load_market()
+    t0 = int(m.times[10])
+    text = f"time,symbol,position,run\n{t0},NVDA,1,a\n{t0},NVDA,-1,b\n{t0},TSLA,1,a\n"
+    runs = S.parse_csv(text, m)
+    assert len(runs) == 2 and runs[0][0, 10] == 1 and runs[1][0, 10] == -1 and runs[0][1, 10] == 1
+    assert E.consistency(runs) is not None
+
+
+def test_csv_too_many_runs_is_readable():
+    m = E.load_market()
+    t0 = int(m.times[10])
+    text = "time,symbol,position,run\n" + "".join(f"{t0},NVDA,1,{i}\n" for i in range(9))
+    with pytest.raises(S.UserError, match="at most 8 runs"):
+        S.parse_csv(text, m)
 
 
 @pytest.mark.parametrize("text,msg", [

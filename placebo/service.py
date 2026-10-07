@@ -88,13 +88,14 @@ def _parse_time(v: str) -> int:
     return int(d.timestamp() * 1000)
 
 
-def parse_csv(text: str, m: E.Market) -> np.ndarray:
+def parse_csv(text: str, m: E.Market) -> list[np.ndarray]:
+    """One run per distinct value of the optional `run` column; no column means one run."""
     if len(text.encode()) > C.MAX_CSV_BYTES:
         raise UserError("the CSV is larger than 1 MB")
     rows = list(csv.DictReader(io.StringIO(text.strip())))
     if not rows or not {"time", "symbol", "position"} <= set(k.strip() for k in rows[0]):
         raise UserError("the CSV needs the header time,symbol,position")
-    pos = np.zeros(m.rets.shape)
+    runs: dict[str, np.ndarray] = {}
     index = {int(t): i for i, t in enumerate(m.times)}
     matched = 0
     for n, r in enumerate(rows, start=2):
@@ -110,11 +111,14 @@ def parse_csv(text: str, m: E.Market) -> np.ndarray:
         if p not in (-1.0, 0.0, 1.0):
             raise UserError(f"line {n}: position must be -1, 0 or 1")
         if sym in m.symbols and t in index:
+            pos = runs.setdefault(r.get("run", "") or "1", np.zeros(m.rets.shape))
             pos[m.symbols.index(sym), index[t]] = p
             matched += 1
     if matched == 0:
         raise UserError("no row matched a 4-hour bar open between 1 Jul and 26 Sep 2026 (UTC)")
-    return pos
+    if len(runs) > C.MAX_RUNS:
+        raise UserError(f"at most {C.MAX_RUNS} runs (the run column has {len(runs)} values)")
+    return list(runs.values())
 
 
 _MOOD = {"at": 0.0, "value": None}
@@ -157,7 +161,7 @@ def run(question: str, csv_text: str | None) -> dict:
     q = parse_question(question or "")
     m = E.load_market(q["symbols"])
     if csv_text:
-        runs, invalid, who = [parse_csv(csv_text, m)], 0, "uploaded"
+        runs, invalid, who = parse_csv(csv_text, m), 0, "uploaded"
     else:
         all_runs, ref = reference_runs()
         keep = [C.SYMBOLS.index(s) for s in q["symbols"]]
