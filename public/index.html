@@ -334,7 +334,7 @@ function render(r, opts = {}) {
       [names[k] || k, f2(v.sharpe), pct(v.total_return), pct(v.max_drawdown), `${Math.round(v.win_rate * 100)}%`, f2(v.turnover_per_day), pct(v.costs_paid)].map((t, i) => h("td", { "data-k": HEADS[i] }, t)))));
   const snap = r.data_snapshot && r.data_snapshot.fetched_at;
   $("snapshot").textContent = snap ? `Candles, fees and funding pulled from api.bitget.com on ${whenFull(snap)}.` : "";
-  $("mood").textContent = r.mood && !r.mood.ok ? `Bitget data service unavailable (HTTP ${r.mood.code}). Market mood not shown.` : "";
+  $("mood").textContent = "";  // market mood is optional; when Bitget's data service answers with an error the line stays empty
   if (opts.press) { const st = $("stamp"); st.classList.remove("pressed"); void st.offsetWidth; st.classList.add("pressed"); }
 }
 
