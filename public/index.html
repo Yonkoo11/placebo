@@ -57,7 +57,7 @@ a { color: inherit; }
 p { margin: 0; }
 
 header { height: 56px; display: flex; align-items: center; padding: 0 var(--s7); border-bottom: 1px solid var(--rule); }
-.mark { font: var(--fw-500) var(--fs-16) var(--plex-sans); color: var(--ink); text-decoration: none; }
+.mark { display: inline-flex; align-items: center; min-height: 44px; font: var(--fw-500) var(--fs-16) var(--plex-sans); color: var(--ink); text-decoration: none; }
 .page { max-width: 1200px; margin: 0 auto; padding: 0 var(--s7); }
 
 .first { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: var(--s7); padding: var(--s6) 0 var(--s8); align-items: start; }
@@ -66,7 +66,7 @@ h1 { font: var(--fw-500) clamp(22px, 1.6vw + 8px, 28px)/1.25 var(--plex-sans); l
 label.q { display: block; font: var(--fw-500) var(--fs-13)/1.4 var(--plex-sans); margin-bottom: 6px; }
 input[type=text] { width: 100%; font: var(--fw-400) var(--fs-16) var(--plex-sans); color: var(--ink); background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r-control); padding: 12px 14px; box-shadow: inset 0 1px 0 var(--edge), var(--shadow-1); }
 .hint { font-size: var(--fs-14); color: var(--ink-2); margin: var(--s2) 0 var(--s4); }
-.file { display: grid; gap: 6px; font-size: var(--fs-16); color: var(--ink-2); margin: 0 0 var(--s4); }
+.file { display: grid; gap: 6px; font-size: var(--fs-14); color: var(--ink-2); margin: 0 0 var(--s4); }
 .file input { font: var(--fw-400) var(--fs-16) var(--plex-sans); color: var(--ink-2); max-width: 100%; }
 .file input::file-selector-button { font: var(--fw-500) var(--fs-16) var(--plex-sans); color: var(--ink); background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r-control); padding: 0 14px; min-height: 44px; margin-right: 12px; cursor: pointer; }
 button { font: var(--fw-500) var(--fs-16) var(--plex-sans); color: var(--ground); background: var(--ink); border: 0; border-radius: var(--r-control); padding: 0 22px; min-height: 44px; cursor: pointer; box-shadow: var(--shadow-1);
@@ -100,7 +100,7 @@ svg { display: block; width: 100%; height: auto; }
 .track .mid { top: 0; bottom: 0; width: 1px; background: var(--ink-3); opacity: .5; }
 .track .est { top: 4px; width: 14px; height: 14px; background: var(--accent); border-radius: var(--r-stamp); transform: translateX(-7px); }
 .axis { grid-column: 2; display: flex; justify-content: space-between; font: var(--fw-400) var(--fs-14) var(--plex-mono); color: var(--ink-2); white-space: nowrap; }
-.table-wrap { overflow-x: auto; }
+.table-wrap { overflow-x: auto; margin: 0 0 var(--s5); }
 table { width: 100%; border-collapse: collapse; font-size: var(--fs-14); }
 th, td { padding: 8px 6px; border-top: 1px solid var(--rule); text-align: right; white-space: nowrap; }
 th:first-child, td:first-child { text-align: left; }
@@ -118,17 +118,18 @@ h2 { font: var(--fw-500) var(--fs-20)/1.3 var(--plex-sans); letter-spacing: -.00
 .chip { color: var(--ink); background: var(--sheet); border: 1px solid var(--rule); padding: 0 14px; min-height: 44px; }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
 .row { display: grid; grid-template-columns: 112px 56px 104px 76px minmax(0, 1fr); gap: var(--s1) var(--s4); padding: var(--s3) 0; border-top: 1px solid var(--rule); align-items: start; }
-.row.paper { grid-template-columns: 112px 128px 150px 76px minmax(0, 1fr); }
+.row.paper { grid-template-columns: 112px 104px 150px 76px minmax(0, 1fr); }
 .row .m { font: var(--fw-400) var(--fs-14)/1.55 var(--plex-mono); color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .more { margin-top: var(--s4); background: var(--sheet); color: var(--ink); border: 1px solid var(--rule); }
 .live { font-size: var(--fs-14); color: var(--ink-2); margin: var(--s4) 0 0; font-variant-numeric: tabular-nums; }
 ol.limits { margin: 0; padding-left: 22px; font-size: var(--fs-20); line-height: 1.4; max-width: 60ch; }
 ol.limits li { margin-bottom: var(--s4); }
-ol.limits .stamp { vertical-align: 3px; margin-left: var(--s2); }
+h2 .stamp { vertical-align: 4px; margin-left: var(--s2); }
 footer { padding: var(--s6) 0 var(--s9); color: var(--ink-2); border-top: 1px solid var(--rule); }
 footer p { max-width: 62ch; margin: 0 0 var(--s3); }
 footer .stamp { vertical-align: 2px; margin-right: var(--s2); }
 footer ul { list-style: none; margin: 0 0 var(--s3); padding: 0; display: flex; gap: var(--s5); flex-wrap: wrap; }
+footer ul a { display: inline-flex; align-items: center; min-height: 24px; }
 
 @media (max-width: 860px) {
   header { padding: 0 var(--s4); }
@@ -138,6 +139,13 @@ footer ul { list-style: none; margin: 0 0 var(--s3); padding: 0; display: flex; 
   .stamp.verdict { right: 12px; font-size: var(--fs-16); }
   .forest { grid-template-columns: 104px minmax(0, 1fr) 48px; }
   .row, .row.paper { grid-template-columns: 1fr 1fr 1fr; }
+  table, tbody { display: block; }
+  table tr { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 var(--s3); padding: var(--s2) 0; border-top: 1px solid var(--rule); }
+  table tr:first-child { display: none; }
+  th, td { display: block; border: 0; padding: 2px 0; text-align: left; white-space: normal; }
+  td:first-child { grid-column: 1 / -1; }
+  td::before { content: attr(data-k); display: block; font: var(--fw-500) var(--fs-13)/1.4 var(--plex-sans); color: var(--ink-2); }
+  td:first-child::before { display: none; }
   .row .r { grid-column: 1 / -1; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -154,9 +162,9 @@ footer ul { list-style: none; margin: 0 0 var(--s3); padding: 0; display: flex; 
       <h1>Placebo runs a placebo-controlled trial on your trading agent, on Bitget's 24/7 stock perps.</h1>
       <p class="lede">Your agent trades. Its twin copies every entry, exit and size, then flips a coin for direction. If your agent cannot beat 2,000 coin-flip twins, it has no edge yet.</p>
       <label class="q" for="q">Ask</label>
-      <input id="q" type="text" value="Should I let the reference agent trade NVDA, TSLA and QQQ?" autocomplete="off" maxlength="500">
-      <p class="hint">Also try: "What if it only trades while the US market is closed?"</p>
-      <label class="file">Or test your own agent: upload its positions as time,symbol,position. Add a run column with 2 to 4 values to be judged for DEPLOY; one run tops out at HALF SIZE.
+      <input id="q" type="text" value="Should this agent trade NVDA, TSLA, QQQ?" autocomplete="off" maxlength="500">
+      <p class="hint">Also try: "What if it only trades while the US market is closed?" An upload with one run tops out at HALF SIZE; 2 to 4 runs can reach DEPLOY.</p>
+      <label class="file">Upload a positions CSV (time,symbol,position; optional run column)
         <input id="csv" type="file" accept=".csv,text/csv">
       </label>
       <button id="run" type="submit">Run the trial</button>
@@ -173,14 +181,14 @@ footer ul { list-style: none; margin: 0 0 var(--s3); padding: 0; display: flex; 
         <svg id="field" role="img" aria-label="2,000 placebo twins as dots, with the agent's Sharpe marked"></svg>
         <figcaption>Each dot is one placebo twin's Sharpe. Dots left of the agent's line are twins it beat.</figcaption>
       </figure>
+      <div class="table-wrap"><table id="arms"></table></div>
       <figure id="forestfig">
         <div class="forest" id="forest"></div>
         <figcaption>Grey band: middle 90% of 2,000 placebo twins. Square: the agent. Right of the band means it beat them.</figcaption>
       </figure>
-      <div class="table-wrap"><table id="arms"></table></div>
       <p class="snapshot" id="snapshot">Candles, fees and funding pulled from api.bitget.com on 2026-09-27 07:15 UTC.</p>
       <p class="mood" id="mood"></p>
-      <p class="call">Your call. Placebo tells you what the numbers say; you decide what runs.</p>
+      <p class="call">Placebo reports the trial. Whether the agent runs is a human decision.</p>
     </article>
   </div>
 
@@ -194,18 +202,18 @@ footer ul { list-style: none; margin: 0 0 var(--s3); padding: 0; display: flex; 
 
   <section id="paper">
     <h2>Forward paper log at live Bitget prices.</h2>
-    <p class="note">Logged every 4 hours by the same agent. Local ledger, no exchange orders; each row is stamped local-paper.</p>
+    <p class="note">Every 4 hours our machine reads live Bitget prices, asks the same agent (Claude Haiku 4.5) for a position, and appends a local-paper row. No exchange orders. The log is published with each deploy, so the last row here is the last deploy's.</p>
     <div id="paperrows"></div>
     <p class="live" id="live"></p>
   </section>
 
   <section id="limits">
-    <h2>What this does not tell you.</h2>
+    <h2>What this does not tell you. <span class="stamp">outside this trial</span></h2>
     <ol class="limits">
-      <li>88 days is short. A "do not deploy" can mean "not proven yet". <span class="stamp">outside this trial</span></li>
-      <li>Past bars only. Live fills, funding changes and outages are not in this test. <span class="stamp">outside this trial</span></li>
-      <li>Results are for these three markets and this window. Different markets need a new trial. <span class="stamp">outside this trial</span></li>
-      <li>The LLM saw no tickers or dates, and its release predates the window, but hiding names cannot hide every pattern. <span class="stamp">outside this trial</span></li>
+      <li>88 days is short. A "do not deploy" can mean "not proven yet".</li>
+      <li>Past bars only. Live fills, funding changes and outages are not in this test.</li>
+      <li>Results are for these three markets and this window. Different markets need a new trial.</li>
+      <li>The LLM saw no tickers or dates, and its release predates the window, but hiding names cannot hide every pattern.</li>
     </ol>
   </section>
 
@@ -239,6 +247,7 @@ function s(tag, attrs = {}, text) {
   return el;
 }
 const MONO = { "font-family": "IBM Plex Mono, monospace", "font-size": "14" };
+const HEADS = ["arm", "Sharpe", "return", "max DD", "win", "trades/day", "costs"];
 const VERDICT = {
   "DEPLOY": (p, c) => `Deploy. It beat ${p}% of its placebo twins, beat the momentum rule, and agreed with itself ${c}% of the time.`,
   "HALF SIZE": (p) => `Half size at most. Better than ${p}% of placebo twins, which is suggestive, not proof.`,
@@ -249,12 +258,12 @@ function state(p) {
   if (p >= 0.95) return ["Worse than placebo", "--red"];
   return ["No detectable edge", "--ink-2"];
 }
-const stampOf = (text) => h("span", { class: "stamp" }, text);
+const mono = (text) => h("span", { class: "m" }, text);
 let current = null;
 
 function drawField(pl) {
   const svg = $("field"), W = Math.max(300, Math.round(svg.getBoundingClientRect().width) || 640);
-  const n = pl.histogram.length, bw = W / n, perCol = Math.max(2, Math.floor(bw / 4.2)), r = 1.45, step = 3.6;
+  const n = pl.histogram.length, bw = W / n, perCol = Math.max(2, Math.floor(bw / 3.4)), r = 1.3, step = 3.0;
   const maxRows = Math.ceil(Math.max(...pl.histogram) / perCol), H = maxRows * step + 44;
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   const lo = pl.bin_edges[0], hi = pl.bin_edges[n], x = (v) => ((v - lo) / (hi - lo)) * W;
@@ -317,9 +326,9 @@ function render(r, opts = {}) {
   drawField(pl);
   const names = { agent: r.agent_source === "uploaded" ? "your agent" : "reference agent", rule: "momentum rule", hold: "buy and hold" };
   $("arms").replaceChildren(
-    h("tr", {}, ["arm", "Sharpe", "return", "max DD", "win", "trades/day", "costs"].map((t) => h("th", {}, t))),
+    h("tr", {}, HEADS.map((t) => h("th", {}, t))),
     ...Object.entries(r.arms).map(([k, v]) => h("tr", { class: k },
-      [names[k] || k, f2(v.sharpe), pct(v.total_return), pct(v.max_drawdown), `${Math.round(v.win_rate * 100)}%`, f2(v.turnover_per_day), pct(v.costs_paid)].map((t) => h("td", {}, t)))));
+      [names[k] || k, f2(v.sharpe), pct(v.total_return), pct(v.max_drawdown), `${Math.round(v.win_rate * 100)}%`, f2(v.turnover_per_day), pct(v.costs_paid)].map((t, i) => h("td", { "data-k": HEADS[i] }, t)))));
   const snap = r.data_snapshot && r.data_snapshot.fetched_at;
   $("snapshot").textContent = snap ? `Candles, fees and funding pulled from api.bitget.com on ${whenFull(snap)}.` : "";
   $("mood").textContent = r.mood && !r.mood.ok ? `Bitget data service unavailable (HTTP ${r.mood.code}). Market mood not shown.` : "";
@@ -332,7 +341,7 @@ let D = [], filter = "ALL", shown = 40;
 function drawRows() {
   const list = filter === "ALL" ? D : D.filter((d) => d.symbol.startsWith(filter));
   $("dcount").textContent = list.length ? `${list.length.toLocaleString("en")} decisions by Claude Haiku 4.5 over 2 runs. Showing ${Math.min(shown, list.length)}.` : "0 decisions match.";
-  $("rows").replaceChildren(...list.slice(0, shown).map((d) => row(when(d.t), `run ${d.run + 1}`, d.symbol, stampOf(side(d.position)), d.reason)));
+  $("rows").replaceChildren(...list.slice(0, shown).map((d) => row(when(d.t), `run ${d.run + 1}`, d.symbol, mono(side(d.position)), d.reason)));
   $("more").hidden = shown >= list.length;
 }
 $("more").addEventListener("click", () => { shown += 40; drawRows(); });
@@ -359,8 +368,8 @@ async function load() {
     const p = await fetch("/paper.json").then((r) => r.json());
     if (!p.length) return empty("No paper steps yet.");
     $("paperrows").replaceChildren(...p.slice().reverse().flatMap((st) => Object.keys(st.positions).map((sym) =>
-      row(when(st.bar + 4 * 3600e3), stampOf(st.source), `${sym} ${st.prices[sym]}`, stampOf(side(st.positions[sym])), st.reasons[sym] || "", "row paper"))));
-    $("live").textContent = `Last read ${whenFull(Math.max(...p.map((st) => st.logged_at)))}. Refreshes every 4 hours.`;
+      row(when(st.bar + 4 * 3600e3), mono(st.source), `${sym} ${st.prices[sym]}`, mono(side(st.positions[sym])), st.reasons[sym] || "", "row paper"))));
+    $("live").textContent = `${p.length} steps. Last read ${whenFull(Math.max(...p.map((st) => st.logged_at)))}, published with the last deploy.`;
   } catch (e) { empty("The paper log did not load. The raw file is at /paper.json."); }
 }
 load();

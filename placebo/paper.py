@@ -18,6 +18,23 @@ from . import engine as E
 from .data import DATA, _get
 
 LOG = DATA / "paper.jsonl"
+PUBLIC = DATA.parent / "public" / "paper.json"
+PUBLISHED_KEYS = ("source", "logged_at", "bar", "model", "prices", "positions", "reasons", "pnl_since_last")
+
+
+def publish(log=LOG, out=PUBLIC, model: str = C.AGENT_MODEL) -> int:
+    """Write the page's paper log from the ledger: rows by the reference model only (the page says
+    "the same agent"), oldest first, without the model inputs. Returns the row count."""
+    rows = []
+    if log.exists():
+        for line in log.read_text().splitlines():
+            if line.strip():
+                r = json.loads(line)
+                if r.get("model") == model:
+                    rows.append({k: r[k] for k in PUBLISHED_KEYS if k in r})
+    rows.sort(key=lambda r: r["bar"])
+    out.write_text(json.dumps(rows))
+    return len(rows)
 
 
 def live_market() -> tuple[E.Market, dict]:
@@ -72,10 +89,12 @@ def step() -> dict:
     }
     with open(LOG, "a") as f:
         f.write(json.dumps(row) + "\n")
+    publish()
     return row
 
 
 if __name__ == "__main__":
     r = step()
+    publish()
     print(json.dumps({k: r[k] for k in r if k != "inputs"}))
     sys.exit(0)

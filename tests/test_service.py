@@ -1,3 +1,4 @@
+import json
 import numpy as np
 import pytest
 
@@ -62,3 +63,18 @@ def test_restrict_hours_zeroes_outside_positions():
     opened = S.restrict_hours(pos, m, "us_open")
     assert np.array_equal(closed + opened, pos)
     assert 0 < closed.sum() < pos.sum()
+
+
+def test_paper_publish_keeps_reference_model_rows_only(tmp_path):
+    from placebo import paper as P
+    log, out = tmp_path / "paper.jsonl", tmp_path / "paper.json"
+    rows = [
+        {"model": "gemini-3.1-flash-lite", "bar": 1, "logged_at": 1, "source": "local-paper", "prices": {}, "positions": {}, "reasons": {}, "inputs": [1]},
+        {"model": P.C.AGENT_MODEL, "bar": 3, "logged_at": 3, "source": "local-paper", "prices": {}, "positions": {}, "reasons": {}, "inputs": [1]},
+        {"model": P.C.AGENT_MODEL, "bar": 2, "logged_at": 2, "source": "local-paper", "prices": {}, "positions": {}, "reasons": {}, "inputs": [1]},
+    ]
+    log.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    assert P.publish(log, out) == 2
+    pub = json.loads(out.read_text())
+    assert [r["bar"] for r in pub] == [2, 3] and all("inputs" not in r for r in pub)
+    assert {r["model"] for r in pub} == {P.C.AGENT_MODEL}
