@@ -5,13 +5,13 @@
 ![reference agent](https://img.shields.io/badge/reference%20agent-beat%2030%25%20of%202%2C000%20twins-B91C1C)
 [![tests](https://github.com/yonkoo11/placebo/actions/workflows/tests.yml/badge.svg)](https://github.com/yonkoo11/placebo/actions/workflows/tests.yml)
 ![data](https://img.shields.io/badge/Bitget%20bars-528%20x%203%20markets-121212)
-[![live](https://img.shields.io/badge/live-placebo--eight.vercel.app-3fb950)](https://placebo-eight.vercel.app)
+[![live](https://img.shields.io/badge/live-tryplacebo.vercel.app-3fb950)](https://tryplacebo.vercel.app)
 
 ### An LLM trading agent has an edge only if it beats a coin flip that trades exactly like it.
 
 **Placebo gives your agent a twin that copies every entry, exit and size, then flips a coin for direction. It replays both on Bitget's 24/7 tokenized-stock perps 2,000 times, with Bitget's fees and funding. Our own reference agent (Claude Haiku 4.5) beat only 30% of its twins and lost 18.6%, 14.1% of it to costs. Verdict: do not deploy.**
 
-**[ Live ↗ ](https://placebo-eight.vercel.app)** · **[ Demo video (77 s) ↗ ](docs/demo.mp4)** · **[ Verify it yourself ↗ ](#verify-it-yourself-in-60-seconds)** · **[ Raw report ↗ ](https://placebo-eight.vercel.app/report.json)**
+**[ Live ↗ ](https://tryplacebo.vercel.app)** · **[ Demo video (77 s) ↗ ](docs/demo.mp4)** · **[ Verify it yourself ↗ ](#verify-it-yourself-in-60-seconds)** · **[ Raw report ↗ ](https://tryplacebo.vercel.app/report.json)**
 
 Built for the Bitget AI Base Camp Hackathon S2 (AI Trading Desk, Open Theme).
 
@@ -40,12 +40,12 @@ A trial for a trading agent, and a desk where a person asks whether to switch it
 
 </div>
 
-1. **Your agent's positions.** Upload them as `time,symbol,position` (add a `run` column with 2 to 4 values to be judged for DEPLOY; a single run can reach HALF SIZE at most, because consistency needs a second run). [An example CSV](https://placebo-eight.vercel.app/example-positions.csv) holds the reference agent's real positions, both runs. A row stamped `2026-07-01T04:00Z` names the 4-hour bar that opens at 04:00 UTC; its position is taken at that bar's close (08:00 UTC) and held through the next bar, to 12:00 UTC. No positions yet? Ask about our reference agent in plain English ("What if it only trades while the US market is closed?"); a small model reads the question for markets and trading hours only.
+1. **Your agent's positions.** Upload them as `time,symbol,position` (add a `run` column with 2 to 4 values to be judged for DEPLOY; a single run can reach HALF SIZE at most, because consistency needs a second run). [An example CSV](https://tryplacebo.vercel.app/example-positions.csv) holds the reference agent's real positions, both runs. A row stamped `2026-07-01T04:00Z` names the 4-hour bar that opens at 04:00 UTC; its position is taken at that bar's close (08:00 UTC) and held through the next bar, to 12:00 UTC. No positions yet? Ask about our reference agent in plain English ("What if it only trades while the US market is closed?"); a small model reads the question for markets and trading hours only.
 2. **Replay.** Bitget USDT-M perps NVDAUSDT, TSLAUSDT and QQQUSDT, 4-hour bars from 1 Jul to 26 Sep 2026 (528 bars each). A decision at the close of a bar is held over the next bar. Every change pays Bitget's 0.06% taker fee plus 0.02% assumed slippage; funding comes from Bitget's history.
 3. **Twins.** Each twin keeps every holding's start, end and size, and redraws its direction at random. Costs are identical, so the only thing tested is direction.
 4. **Verdict.** Fixed before any run. **Deploy** if the agent beats 95% of twins in every run, beats a momentum rule, agrees with itself on 80%+ of decisions and never draws down more than 20%. **Half size** if it beats 80% and makes money. **Do not deploy** otherwise.
 5. **Your call.** Placebo recommends; a person decides what runs.
-6. **Share it.** Every result has a "Copy link to this trial" control. The link (`/t/<token>`) carries the whole input, question or uploaded positions, and the page recomputes the trial on the same data; the placebo draws are seeded, so the numbers match. [How the trial works](https://placebo-eight.vercel.app/methods) lists every value the engine uses.
+6. **Share it.** Every result has a "Copy link to this trial" control. The link (`/t/<token>`) carries the whole input, question or uploaded positions, and the page recomputes the trial on the same data; the placebo draws are seeded, so the numbers match. [How the trial works](https://tryplacebo.vercel.app/methods) lists every value the engine uses.
 
 ## The reference trial
 
