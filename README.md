@@ -40,7 +40,7 @@ A trial for a trading agent, and a desk where a person asks whether to switch it
 
 </div>
 
-1. **Your agent's positions.** Upload them as `time,symbol,position` (add a `run` column with 2 to 4 values to be judged for DEPLOY; a single run can reach HALF SIZE at most, because consistency needs a second run). [An example CSV](https://placebo-eight.vercel.app/example-positions.csv) holds the reference agent's real positions, both runs. No positions yet? Ask about our reference agent in plain English ("What if it only trades while the US market is closed?"); a small model reads the question for markets and trading hours only.
+1. **Your agent's positions.** Upload them as `time,symbol,position` (add a `run` column with 2 to 4 values to be judged for DEPLOY; a single run can reach HALF SIZE at most, because consistency needs a second run). [An example CSV](https://placebo-eight.vercel.app/example-positions.csv) holds the reference agent's real positions, both runs. A row stamped `2026-07-01T04:00Z` names the 4-hour bar that opens at 04:00 UTC; its position is taken at that bar's close (08:00 UTC) and held through the next bar, to 12:00 UTC. No positions yet? Ask about our reference agent in plain English ("What if it only trades while the US market is closed?"); a small model reads the question for markets and trading hours only.
 2. **Replay.** Bitget USDT-M perps NVDAUSDT, TSLAUSDT and QQQUSDT, 4-hour bars from 1 Jul to 26 Sep 2026 (528 bars each). A decision at the close of a bar is held over the next bar. Every change pays Bitget's 0.06% taker fee plus 0.02% assumed slippage; funding comes from Bitget's history.
 3. **Twins.** Each twin keeps every holding's start, end and size, and redraws its direction at random. Costs are identical, so the only thing tested is direction.
 4. **Verdict.** Fixed before any run. **Deploy** if the agent beats 95% of twins in every run, beats a momentum rule, agrees with itself on 80%+ of decisions and never draws down more than 20%. **Half size** if it beats 80% and makes money. **Do not deploy** otherwise.
@@ -51,7 +51,7 @@ A trial for a trading agent, and a desk where a person asks whether to switch it
 
 Claude Haiku 4.5 (released October 2025, so it could not have seen these prices) decided long, flat or short for all three markets every 4 hours. It saw masked asset names ("Asset A"), the last twelve 4-hour returns, 30-bar volatility, whether the US exchange was closed, and its own position. It never saw a ticker or a price date. Two runs, 1,056 bar decisions, 0 invalid outputs.
 
-| arm | Sharpe | return | max drawdown | win | trades/day | costs |
+| arm | Sharpe | return | max drawdown | win | turnover/day | costs (% of capital) |
 |---|---|---|---|---|---|---|
 | reference agent (worst run) | -4.86 | -18.6% | 20.3% | 45% | 2.00 | 14.1% |
 | momentum rule (6 bars) | -3.20 | -16.9% | 19.2% | 45% | 2.11 | 14.9% |
@@ -68,7 +68,7 @@ No key, no account, no network: the Bitget snapshot and every agent decision are
 git clone https://github.com/yonkoo11/placebo && cd placebo
 pip install numpy pytest
 python3 -m placebo.data --check     # → NVDAUSDT 528 bars  taker 0.0006  funding events 264 (non-zero 49)  (and TSLA, QQQ)
-python3 -m pytest -q tests          # → 37 passed
+python3 -m pytest -q tests          # → 39 passed
 python3 -m placebo.trial --runs 2 | grep -E "Verdict|Beat"
 # → Verdict: **DO NOT DEPLOY**
 # → - Beat 30% of 2000 placebo twins, p = 0.705 (one-sided, worst run)

@@ -90,9 +90,9 @@ button.secondary { color: var(--ink); background: var(--sheet); border: 1px soli
 .tagline { display: flex; align-items: center; gap: 10px; font: var(--fw-500) var(--fs-13)/1.4 var(--plex-sans); }
 .whisker { width: 28px; height: 12px; flex: none; }
 .verdict-text { font-size: var(--fs-20); line-height: 1.4; margin: 6px 0 var(--s1); max-width: 40ch; }
-.pline { font: var(--fw-400) var(--fs-14)/1.5 var(--plex-mono); font-variant-numeric: tabular-nums; color: var(--ink-2); margin: 0 0 var(--s5); }
+.pline { font: var(--fw-400) var(--fs-16)/1.5 var(--plex-mono); font-variant-numeric: tabular-nums; color: var(--ink-2); margin: 0 0 var(--s5); }
 figure { margin: 0 0 var(--s5); }
-figcaption { font-size: var(--fs-14); color: var(--ink-2); margin-top: 6px; }
+figcaption { font-size: var(--fs-16); color: var(--ink-2); margin-top: 6px; }
 svg { display: block; width: 100%; height: auto; }
 .forest { display: grid; grid-template-columns: 150px minmax(0, 1fr) 64px; gap: 10px 14px; align-items: center; font-size: var(--fs-14); }
 .forest .num { font: var(--fw-400) var(--fs-14) var(--plex-mono); text-align: right; font-variant-numeric: tabular-nums; }
@@ -117,8 +117,9 @@ tr.agent td:first-child { color: var(--accent); font-family: var(--plex-sans); f
 .linknote { color: var(--ink-2); margin: 0 0 var(--s4); max-width: 62ch; }
 .input-line { margin: 0 0 var(--s5); max-width: 62ch; overflow-wrap: anywhere; }
 .input-line .m { font: var(--fw-400) var(--fs-16)/1.55 var(--plex-mono); }
-.prose { max-width: 62ch; padding: var(--s6) 0 var(--s8); }
+.prose { max-width: 720px; padding: var(--s6) 0 var(--s8); }
 .prose h1 { max-width: none; }
+.prose .evidence { font: var(--fw-400) var(--fs-14)/1.5 var(--plex-mono); color: var(--ink-2); margin: 0 0 var(--s4); }
 .prose h1 .stamp { vertical-align: 6px; margin-left: var(--s2); }
 .prose .lede { margin-bottom: var(--s5); }
 .prose h2 { margin-top: var(--s7); }

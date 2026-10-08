@@ -19,7 +19,7 @@ function s(tag, attrs = {}, text) {
   return el;
 }
 const MONO = { "font-family": "IBM Plex Mono, monospace", "font-size": "14" };
-const HEADS = ["arm", "Sharpe", "return", "max DD", "win", "trades/day", "costs"];
+const HEADS = ["arm", "Sharpe", "return", "max DD", "win", "turnover/day", "costs (% of capital)"];
 const VERDICT = {
   "DEPLOY": (p, c) => `Deploy. It beat ${p}% of its placebo twins, beat the momentum rule, and agreed with itself ${c}% of the time.`,
   "HALF SIZE": (p) => `Half size at most. Better than ${p}% of placebo twins, which is suggestive, not proof.`,

@@ -18,6 +18,7 @@
 <div class="page">
 <main class="prose">
   <h1>How the trial works. <span class="stamp">pre-registered</span></h1>
+  <p class="evidence">Rule committed 2026-09-27 07:28 UTC (e1a4a7f), first clean run 11:43 UTC the same day (bf0247a).</p>
   <p class="lede">Every number on the site comes from one engine, placebo/engine.py, run on a committed snapshot of Bitget market data. This page says what it does, with the exact values.</p>
   <a class="btn" href="/">Run a trial</a>
 
@@ -27,7 +28,8 @@
   <p>Placebo draws 2,000 twins with a fixed random seed (seed 7), so the same input always gives the same numbers and a shared link reopens to the same trial.</p>
 
   <h2>Uploading your own agent.</h2>
-  <p>A CSV with the header time,symbol,position: time as an ISO date or epoch milliseconds at a 4-hour bar open, symbol NVDA, TSLA or QQQ, position -1, 0 or 1. An optional run column with 2 to 4 values gives one run per value. The file is at most 1 MB.</p>
+  <p>A CSV with the header time,symbol,position: time as an ISO date or epoch milliseconds at a 4-hour bar open, symbol NVDA, TSLA or QQQ (NVDAUSDT, TSLAUSDT, QQQUSDT also accepted), position -1, 0 or 1. An optional run column with 2 to 4 values gives one run per value. The file is at most 1 MB.</p>
+  <p>A row stamped 2026-07-01T04:00Z names the 4-hour bar that opens at 04:00 UTC; its position is taken at that bar's close (08:00 UTC) and held through the next bar, to 12:00 UTC.</p>
 
   <h2>The p-value.</h2>
   <p>The agent's annualised Sharpe is compared with the 2,000 twin Sharpes. p = (1 + twins at or above the agent) / 2,001, one-sided. Sharpe uses 2,190 four-hour bars per year.</p>
@@ -37,7 +39,7 @@
   <p>Every arm pays Bitget's 0.06% taker fee plus an assumed 0.02% slippage on each position change, and Bitget's recorded funding rate for every funding time inside a held bar.</p>
   <p>The comparison arms are a momentum rule (the sign of the last 6 bars' return) and buy and hold.</p>
 
-  <h2>The verdict rule, fixed before any run.</h2>
+  <h2 id="rule">The verdict rule, fixed before any run.</h2>
   <ul>
     <li>DEPLOY: p at or below 0.05 in every run, Sharpe above the momentum rule, consistency at least 0.80, max drawdown at most 0.20.</li>
     <li>HALF SIZE: p at or below 0.20 and Sharpe above 0.</li>

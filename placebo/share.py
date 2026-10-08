@@ -2,7 +2,7 @@
 
 There is no database. A token is URL-safe base64 of zlib-compressed compact JSON:
   {"v": 1, "q": question, "h": hours, "s": [symbols]}                  a question trial
-  {... , "t": bars, "p": [one base64 string per run]}                   an uploaded trial
+  {... , "t": bars, "b": bars with a CSV row, "p": [one base64 string per run]}   an uploaded trial
 Positions are packed 2 bits per bar per symbol (0 flat, 1 long, 2 short), row-major over
 (symbol, bar), so 528 bars x 3 symbols x 4 runs is about 1.6 KB before compression.
 The engine seeds its placebo draws (config.PLACEBO_SEED), so a link always reopens to the same
@@ -52,10 +52,12 @@ def unpack_run(text: str, shape: tuple[int, int]) -> np.ndarray:
     return VALUES[codes].reshape(shape)
 
 
-def encode(question: str, hours: str, symbols: list[str], runs: list[np.ndarray] | None = None) -> str:
+def encode(question: str, hours: str, symbols: list[str], runs: list[np.ndarray] | None = None,
+           bars_matched: int | None = None) -> str:
     payload = {"v": 1, "q": (question or "")[:500], "h": hours, "s": list(symbols)}
     if runs is not None:
         payload["t"] = int(runs[0].shape[1])
+        payload["b"] = int(bars_matched if bars_matched is not None else runs[0].shape[1])
         payload["p"] = [pack_run(r) for r in runs]
     z = zlib.compress(json.dumps(payload, separators=(",", ":")).encode(), 9)
     return base64.urlsafe_b64encode(z).rstrip(b"=").decode()
@@ -88,11 +90,14 @@ def decode(token: str) -> dict:
     if (not isinstance(s, list) or not s or len(set(s)) != len(s) or any(x not in C.SYMBOLS for x in s)):
         raise UserError("the link names a market Placebo does not have (NVDA, TSLA or QQQ)")
     symbols = [x for x in C.SYMBOLS if x in s]
-    out = {"question": q, "hours": h, "symbols": symbols, "bars": None, "packed": None}
+    out = {"question": q, "hours": h, "symbols": symbols, "bars": None, "packed": None, "bars_matched": None}
     if "p" in p or "t" in p:
-        t, packed = p.get("t"), p.get("p")
+        t, packed, b = p.get("t"), p.get("p"), p.get("b", p.get("t"))
         if not isinstance(t, int) or isinstance(t, bool) or t <= 0:
             raise UserError("the link's bar count is not readable")
+        if not isinstance(b, int) or isinstance(b, bool) or not 0 <= b <= t:
+            raise UserError("the link's matched-bar count is not readable")
+        out["bars_matched"] = b
         if not isinstance(packed, list) or not packed or not all(isinstance(x, str) for x in packed):
             raise UserError("the link's positions are not readable")
         if len(packed) > C.MAX_RUNS:

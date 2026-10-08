@@ -20,10 +20,10 @@
   <div class="first">
     <form id="f" novalidate>
       <h1>Test your trading agent before it trades real money.</h1>
-      <p class="lede">Upload its positions. Placebo builds 2,000 twins that copy its timing and size and flip a coin for direction, replays all of them on Bitget's 24/7 stock perps with real fees, and stamps a verdict.</p>
+      <p class="lede">Upload its positions. 2,000 twins copy its timing and size and flip a coin for direction, replayed on Bitget's 24/7 stock perps with real fees. The verdict is stamped.</p>
       <label class="q" for="upload">Your agent's positions (CSV)</label>
       <input id="upload" type="file" accept=".csv,text/csv">
-      <p class="hint">time,symbol,position, optional run column; 2 to 4 runs can reach DEPLOY, 1 run tops out at HALF SIZE. <a href="/example-positions.csv" download>Download an example CSV</a></p>
+      <p class="hint" title="A row stamped 2026-07-01T04:00Z names the 4-hour bar that opens at 04:00 UTC; its position is taken at that bar's close (08:00 UTC) and held through the next bar, to 12:00 UTC.">time,symbol,position, optional run column; 2 to 4 runs can reach DEPLOY, 1 run tops out at HALF SIZE. <a href="/example-positions.csv" download>Download an example CSV</a></p>
       <p class="divider">No positions yet?</p>
       <label class="q" for="q">Ask about our reference agent</label>
       <input id="q" type="text" value="Should this agent trade NVDA, TSLA, QQQ?" autocomplete="off" maxlength="500">
@@ -49,10 +49,9 @@
       </figure>
       <p class="snapshot" id="snapshot">Candles, fees and funding pulled from api.bitget.com on 2026-09-27 07:15 UTC.</p>
       <p class="mood" id="mood"></p>
-      <p class="call">Placebo reports the trial. Whether the agent runs is a human decision.</p>
       <div class="share" id="share"></div>
       <p class="link-line">How the twin is built, what every arm pays, and the verdict rule fixed before any run: <a href="/methods">Methods</a>.</p>
-      <p class="link-line">88 days of past bars. A do-not-deploy can mean not proven yet. <a href="/methods#limits">Limits</a>.</p>
+      <p class="link-line"><a href="/methods#limits">Limits</a>: 88 days of past bars, three markets, no live fills.</p>
     </article>
   </div>
 

@@ -20,7 +20,8 @@
   <div class="first">
     <div>
       <h1 id="h1">Checking this agent against 2,000 twins.</h1>
-      <p class="linknote">Recomputed just now on the same Bitget data, so these numbers are the original's.</p>
+      <p class="linknote">Recomputed from the link on the same data.</p>
+      <p class="linknote">Verdict rule, fixed before any run: <a href="/methods#rule">Methods</a>.</p>
       <p class="input-line" id="input"></p>
       <div class="actions"><a class="btn" href="/#upload">Test your own agent</a><button type="button" class="secondary" id="copy-top" hidden>Copy link</button></div>
       <p id="status" class="status" role="status" aria-live="polite">Recomputing 2,000 twins on Bitget candles. 2 to 10 seconds.</p>
@@ -42,7 +43,6 @@
       </figure>
       <p class="snapshot" id="snapshot"></p>
       <p class="mood" id="mood"></p>
-      <p class="call">Placebo reports the trial. Whether the agent runs is a human decision.</p>
       <div class="share" id="share"></div>
     </article>
   </div>
@@ -69,7 +69,7 @@
     const hours = data.hours === "us_closed" ? " Positions kept only while the US exchange is closed." : data.hours === "us_open" ? " Positions kept only while the US exchange is open." : "";
     const runs = data.p_values_per_run.length;
     $("input").replaceChildren(...(data.agent_source === "uploaded"
-      ? [`Uploaded positions, ${runs} ${runs === 1 ? "run" : "runs"}, ${data.bars_matched} bars matched.`]
+      ? [`Uploaded positions, ${runs} ${runs === 1 ? "run" : "runs"}, ${data.bars_matched} bars matched, positions on ${data.positions_on}.`]
       : ["Question: ", h("span", { class: "m" }, `"${data.question || "Should this agent trade NVDA, TSLA, QQQ?"}"`)]), hours);
     render(data, { example: false, forest: false, press: true, token: data.token, copyLabel: "Copy link", copyHelp: "Send it to whoever decides." });
     $("h1").textContent = $("vtext").textContent.split(". ").slice(0, 2).join(". ").replace(/\.?$/, ".");

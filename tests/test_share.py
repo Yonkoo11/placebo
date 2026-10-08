@@ -93,5 +93,26 @@ def test_example_csv_parses_and_runs_as_two_runs():
     res = S.run("Should this agent trade NVDA, TSLA, QQQ?", text)
     assert res["verdict"] in (C.VERDICT_NO, C.VERDICT_HALF, C.VERDICT_DEPLOY)
     assert res["agent_source"] == "uploaded" and len(res["p_values_per_run"]) == 2
-    assert 0 < res["bars_matched"] <= 528
-    assert S.run_token(res["token"])["placebo"]["p_value"] == res["placebo"]["p_value"]
+    assert res["bars_matched"] == 528 and 0 < res["positions_on"] <= 528
+    again = S.run_token(res["token"])
+    assert again["placebo"]["p_value"] == res["placebo"]["p_value"]
+    assert again["bars_matched"] == 528 and again["positions_on"] == res["positions_on"]
+
+
+def test_bars_matched_counts_rows_not_positions():
+    m = E.load_market()
+    t0, t1 = int(m.times[10]), int(m.times[11])
+    text = f"time,symbol,position\n{t0},NVDA,0\n{t1},NVDA,1\n"
+    runs, bars = S.parse_csv_detail(text, m)
+    assert bars == 2
+    res = S.run("Should this agent trade NVDA?", text)
+    assert res["bars_matched"] == 2 and res["positions_on"] == 1
+
+
+def test_written_ticker_wins_when_the_model_names_no_market(monkeypatch):
+    monkeypatch.setattr(S, "_ask_model", lambda q: {"markets": [], "hours": "all"})
+    assert S.parse_question("NVDA") == {"symbols": ["NVDAUSDT"], "hours": "all", "parser": "llm"}
+    monkeypatch.setattr(S, "_ask_model", lambda q: {"markets": ["TSLA"], "hours": "us_open"})
+    assert S.parse_question("NVDA")["symbols"] == ["TSLAUSDT"]
+    monkeypatch.setattr(S, "_ask_model", lambda q: (_ for _ in ()).throw(RuntimeError("down")))
+    assert S.parse_question("NVDA") == {"symbols": ["NVDAUSDT"], "hours": "all", "parser": "keywords"}

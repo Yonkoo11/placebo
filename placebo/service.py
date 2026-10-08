@@ -21,32 +21,39 @@ from .share import UserError  # one error class for the page: {reason}
 TICKERS = {"NVDA": "NVDAUSDT", "TSLA": "TSLAUSDT", "QQQ": "QQQUSDT"}
 
 
+def _ask_model(q: str) -> dict:
+    """Gemini reads the question for markets and trading hours. Raises on any failure."""
+    body = {
+        "contents": [{"role": "user", "parts": [{"text": (
+            "Read a trader's question about a trading agent. Which markets does it ask about "
+            "(NVDA, TSLA, QQQ; none named or 'all' means all three)? Does it restrict trading "
+            "hours: only while the US stock exchange is closed (\"us_closed\"), only while it "
+            "is open (\"us_open\"), or no restriction (\"all\")? Reply JSON "
+            "{\"markets\": [..], \"hours\": \"all\"|\"us_closed\"|\"us_open\"}.\n\nQuestion: " + q[:500])}]}],
+        "generationConfig": {"responseMimeType": "application/json"},
+    }
+    req = urllib.request.Request(
+        f"https://generativelanguage.googleapis.com/v1beta/models/{C.PARSER_MODEL}:generateContent",
+        data=json.dumps(body).encode(),
+        headers={"x-goog-api-key": os.environ["GEMINI_API_KEY"], "Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=8) as r:
+        text = json.load(r)["candidates"][0]["content"]["parts"][0]["text"]
+    return json.loads(text)
+
+
 def parse_question(q: str) -> dict:
-    """{"symbols": [...], "parser": "llm"|"keywords"}. Falls back to keywords when the model is unreachable."""
+    """{"symbols": [...], "hours": ..., "parser": "llm"|"keywords"}. Falls back to keywords when the model is
+    unreachable. A ticker written in the question always counts: when the model names no market but the
+    question does ("NVDA"), the written tickers win (a bare "NVDA" ran all three markets, 2026-10-08)."""
     found = [TICKERS[k] for k in TICKERS if re.search(rf"\b{k}\b", q.upper())]
+    by_text = [s for s in C.SYMBOLS if s in found]
     try:
-        body = {
-            "contents": [{"role": "user", "parts": [{"text": (
-                "Read a trader's question about a trading agent. Which markets does it ask about "
-                "(NVDA, TSLA, QQQ; none named or 'all' means all three)? Does it restrict trading "
-                "hours: only while the US stock exchange is closed (\"us_closed\"), only while it "
-                "is open (\"us_open\"), or no restriction (\"all\")? Reply JSON "
-                "{\"markets\": [..], \"hours\": \"all\"|\"us_closed\"|\"us_open\"}.\n\nQuestion: " + q[:500])}]}],
-            "generationConfig": {"responseMimeType": "application/json"},
-        }
-        req = urllib.request.Request(
-            f"https://generativelanguage.googleapis.com/v1beta/models/{C.PARSER_MODEL}:generateContent",
-            data=json.dumps(body).encode(),
-            headers={"x-goog-api-key": os.environ["GEMINI_API_KEY"], "Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=8) as r:
-            text = json.load(r)["candidates"][0]["content"]["parts"][0]["text"]
-        obj = json.loads(text)
+        obj = _ask_model(q)
         mk = [TICKERS[x] for x in obj.get("markets", []) if x in TICKERS]
         hours = obj.get("hours") if obj.get("hours") in HOURS else "all"
-        return {"symbols": [s for s in C.SYMBOLS if s in mk] or list(C.SYMBOLS), "hours": hours, "parser": "llm"}
+        return {"symbols": [s for s in C.SYMBOLS if s in mk] or by_text or list(C.SYMBOLS), "hours": hours, "parser": "llm"}
     except Exception:
-        return {"symbols": [s for s in C.SYMBOLS if s in found] or list(C.SYMBOLS),
-                "hours": keyword_hours(q), "parser": "keywords"}
+        return {"symbols": by_text or list(C.SYMBOLS), "hours": keyword_hours(q), "parser": "keywords"}
 
 
 HOURS = ("all", "us_closed", "us_open")
@@ -88,6 +95,11 @@ def _parse_time(v: str) -> int:
 
 def parse_csv(text: str, m: E.Market) -> list[np.ndarray]:
     """One run per distinct value of the optional `run` column; no column means one run."""
+    return parse_csv_detail(text, m)[0]
+
+
+def parse_csv_detail(text: str, m: E.Market) -> tuple[list[np.ndarray], int]:
+    """(runs, bars_matched): bars_matched counts the 4-hour bars that had at least one CSV row."""
     if len(text.encode()) > C.MAX_CSV_BYTES:
         raise UserError("the CSV is larger than 1 MB")
     rows = list(csv.DictReader(io.StringIO(text.strip())))
@@ -96,6 +108,7 @@ def parse_csv(text: str, m: E.Market) -> list[np.ndarray]:
     runs: dict[str, np.ndarray] = {}
     index = {int(t): i for i, t in enumerate(m.times)}
     matched = 0
+    bars_hit: set[int] = set()
     for n, r in enumerate(rows, start=2):
         r = {k.strip(): (v or "").strip() for k, v in r.items()}
         sym = r["symbol"].upper()
@@ -115,9 +128,10 @@ def parse_csv(text: str, m: E.Market) -> list[np.ndarray]:
             pos = runs.setdefault(key, np.zeros(m.rets.shape))
             pos[m.symbols.index(sym), index[t]] = p
             matched += 1
+            bars_hit.add(index[t])
     if matched == 0:
         raise UserError("no row matched a 4-hour bar open between 1 Jul and 26 Sep 2026 (UTC)")
-    return list(runs.values())
+    return list(runs.values()), len(bars_hit)
 
 
 _MOOD = {"at": 0.0, "value": None}
@@ -157,7 +171,7 @@ def _fetch_mood() -> dict:
 
 
 def _trial(question: str, hours: str, symbols: list[str], m: E.Market, uploaded: list[np.ndarray] | None,
-           parser: str) -> dict:
+           parser: str, bars_matched: int | None = None) -> dict:
     """The one trial path: question (reference agent) or uploaded runs, hours filter, evaluate, link token."""
     if uploaded is not None:
         runs, invalid, who, samples = uploaded, 0, "uploaded", []
@@ -166,21 +180,24 @@ def _trial(question: str, hours: str, symbols: list[str], m: E.Market, uploaded:
         keep = [C.SYMBOLS.index(s) for s in symbols]
         runs, invalid, who = [r[keep] for r in all_runs], ref["invalid_outputs"], "reference"
         samples = [d for d in ref.get("sample_decisions", []) if d["symbol"] in symbols]
-    token = share.encode(question, hours, symbols, uploaded)
-    # bars on which at least one run holds a position in any market, before the hours filter
-    bars_matched = int((np.abs(np.stack(runs)).sum(axis=(0, 1)) > 0).sum())
+    # bars_matched: bars with at least one CSV row (reference: every bar has a decision).
+    # positions_on: bars on which at least one run holds a non-zero position in any market, before the hours filter.
+    if bars_matched is None:
+        bars_matched = int(runs[0].shape[1])
+    positions_on = int((np.abs(np.stack(runs)).sum(axis=(0, 1)) > 0).sum())
+    token = share.encode(question, hours, symbols, uploaded, bars_matched if uploaded is not None else None)
     runs = [restrict_hours(r, m, hours) for r in runs]
     res = E.evaluate(runs, m, invalid=invalid)
     res.update({"agent_source": who, "parser": parser, "hours": hours, "mood": market_mood(),
-                "sample_decisions": samples, "token": token, "question": question[:500], "bars_matched": bars_matched})
+                "sample_decisions": samples, "token": token, "question": question[:500], "bars_matched": bars_matched, "positions_on": positions_on})
     return res
 
 
 def run(question: str, csv_text: str | None) -> dict:
     q = parse_question(question or "")
     m = E.load_market(q["symbols"])
-    uploaded = parse_csv(csv_text, m) if csv_text else None
-    return _trial(question or "", q["hours"], q["symbols"], m, uploaded, q["parser"])
+    uploaded, bars = parse_csv_detail(csv_text, m) if csv_text else (None, None)
+    return _trial(question or "", q["hours"], q["symbols"], m, uploaded, q["parser"], bars)
 
 
 def run_token(token: str) -> dict:
@@ -188,6 +205,6 @@ def run_token(token: str) -> dict:
     d = share.decode(token)
     m = E.load_market(d["symbols"])
     uploaded = share.runs_from(d, m.rets.shape) if d["packed"] is not None else None
-    res = _trial(d["question"], d["hours"], d["symbols"], m, uploaded, "link")
+    res = _trial(d["question"], d["hours"], d["symbols"], m, uploaded, "link", d["bars_matched"])
     res["from_link"] = True
     return res
