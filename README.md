@@ -11,7 +11,7 @@
 
 **Placebo gives your agent a twin that copies every entry, exit and size, then flips a coin for direction. It replays both on Bitget's 24/7 tokenized-stock perps 2,000 times, with Bitget's fees and funding. Our own reference agent (Claude Haiku 4.5) beat only 30% of its twins and lost 18.6%, 14.1% of it to costs. Verdict: do not deploy.**
 
-**[ Live ↗ ](https://placebo-eight.vercel.app)** · **[ Verify it yourself ↗ ](#verify-it-yourself-in-60-seconds)** · **[ Raw report ↗ ](https://placebo-eight.vercel.app/report.json)**
+**[ Live ↗ ](https://placebo-eight.vercel.app)** · **[ Demo video (77 s) ↗ ](docs/demo.mp4)** · **[ Verify it yourself ↗ ](#verify-it-yourself-in-60-seconds)** · **[ Raw report ↗ ](https://placebo-eight.vercel.app/report.json)**
 
 Built for the Bitget AI Base Camp Hackathon S2 (AI Trading Desk, Open Theme).
 
@@ -90,7 +90,7 @@ python3 -m placebo.trial --runs 2 | grep -E "Verdict|Beat"
 | Forward paper trading | Local ledger at live Bitget prices every 4 hours, rows say `local-paper`; no exchange orders, no Bitget Demo key yet |
 | Bitget MCP market mood | Tried on every answer; Bitget's data service returned HTTP 503 all of 27 Sep 2026, and the page says so |
 | An agent that passes | Not claimed. The reference agent fails, and so does the momentum rule |
-| Deflated Sharpe / PBO | Not included; see [agent-arena](https://github.com/narutopyy/agent-arena) for that |
+| Deflated Sharpe / PBO | Not included |
 
 ## Layout
 
