@@ -45,6 +45,7 @@ A trial for a trading agent, and a desk where a person asks whether to switch it
 3. **Twins.** Each twin keeps every holding's start, end and size, and redraws its direction at random. Costs are identical, so the only thing tested is direction.
 4. **Verdict.** Fixed before any run. **Deploy** if the agent beats 95% of twins in every run, beats a momentum rule, agrees with itself on 80%+ of decisions and never draws down more than 20%. **Half size** if it beats 80% and makes money. **Do not deploy** otherwise.
 5. **Your call.** Placebo recommends; a person decides what runs.
+6. **Share it.** Every result has a "Copy link to this trial" control. The link (`/t/<token>`) carries the whole input, question or uploaded positions, and the page recomputes the trial on the same data; the placebo draws are seeded, so the numbers match. [How the trial works](https://placebo-eight.vercel.app/methods) lists every value the engine uses.
 
 ## The reference trial
 
@@ -67,7 +68,7 @@ No key, no account, no network: the Bitget snapshot and every agent decision are
 git clone https://github.com/yonkoo11/placebo && cd placebo
 pip install numpy pytest
 python3 -m placebo.data --check     # → NVDAUSDT 528 bars  taker 0.0006  funding events 264 (non-zero 49)  (and TSLA, QQQ)
-python3 -m pytest -q tests          # → 15 passed
+python3 -m pytest -q tests          # → 36 passed
 python3 -m placebo.trial --runs 2 | grep -E "Verdict|Beat"
 # → Verdict: **DO NOT DEPLOY**
 # → - Beat 30% of 2000 placebo twins, p = 0.705 (one-sided, worst run)
@@ -99,11 +100,12 @@ placebo/
   data.py      Bitget public REST: candles, fees, funding → data/ snapshot
   agent.py     the reference LLM agent, masked inputs, cached decisions
   engine.py    backtest with costs, placebo twins, metrics, verdict
-  service.py   what the page calls: question parser, CSV upload, hours filter
+  service.py   what the page calls: question parser, CSV upload, hours filter, link replay
+  share.py     shareable trial links: the token that carries a trial's input
   trial.py     CLI: runs the reference trial, writes out/report.json
   paper.py     one forward paper step at live Bitget prices
-api/trial.py   serverless handler for the live page
-public/        the page and the published report.json
+api/trial.py   serverless handler for the live page (question, CSV, or a link token)
+public/        index.html (trial desk), trial.html (a shared trial at /t/<token>), methods.html, app.css, app.js, report.json
 data/          Bitget snapshot, agent decisions, paper log
 tests/         engine and upload tests
 ```

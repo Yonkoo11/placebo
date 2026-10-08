@@ -4,5 +4,15 @@
       "maxDuration": 30,
       "includeFiles": "{placebo/**,data/candles_*,data/funding_*,data/snapshot.json,data/reference_positions.json}"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/t/:token",
+      "destination": "/trial.html"
+    },
+    {
+      "source": "/methods",
+      "destination": "/methods.html"
+    }
+  ]
 }

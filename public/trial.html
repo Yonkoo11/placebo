@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Placebo: a shared trial</title>
+<meta name="description" content="A Placebo trial opened from a shared link and recomputed on the same Bitget data: the agent against 2,000 coin-flip twins with its exact timing and size.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css">
+
+</head>
+<body>
+<header><a class="mark" href="/" aria-label="Placebo home"><svg viewBox="0 0 16 16" aria-hidden="true"><g transform="rotate(-4 8 8)"><rect x="1.5" y="3.7" width="13" height="8.6" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3.9" y="6.1" width="8.2" height="3.8" rx=".5" fill="none" stroke="currentColor" stroke-width=".8"/><rect x="5.7" y="7.35" width="4.6" height="1.3" rx=".3" fill="currentColor"/></g></svg>Placebo</a><nav aria-label="Pages"><a href="/">Trial</a><a href="/methods">Methods</a></nav></header>
+<div class="page">
+<main>
+  <div class="first">
+    <div>
+      <h1>A trial opened from a link.</h1>
+      <p class="linknote">Trial opened from a link; recomputed now on the same data.</p>
+      <p class="input-line" id="input"></p>
+      <a class="btn" href="/">Run another trial</a>
+      <p id="status" class="status" role="status" aria-live="polite">Recomputing 2,000 twins on Bitget candles. 2 to 10 seconds.</p>
+    </div>
+    <article id="sheet" class="sheet" aria-live="polite" aria-busy="true">
+      <div class="stamp verdict" id="stamp">RECOMPUTING</div>
+      <p class="example" id="example" hidden></p>
+      <p class="tagline"><svg class="whisker" id="whisker" viewBox="0 0 28 12" aria-hidden="true"></svg><span id="tag" style="color: var(--ink-2)"></span></p>
+      <p class="verdict-text" id="vtext"></p>
+      <p class="pline" id="pline"></p>
+      <figure>
+        <svg id="field" role="img" aria-label="2,000 placebo twins as dots, with the agent's Sharpe marked"></svg>
+        <figcaption>Each dot is one placebo twin's Sharpe. Dots left of the agent's line are twins it beat.</figcaption>
+      </figure>
+      <div class="table-wrap"><table id="arms"></table></div>
+      <figure id="forestfig" hidden>
+        <div class="forest" id="forest"></div>
+        <figcaption>Grey band: middle 90% of 2,000 placebo twins. Square: the agent. Right of the band means it beat them.</figcaption>
+      </figure>
+      <p class="snapshot" id="snapshot"></p>
+      <p class="mood" id="mood"></p>
+      <p class="call">Placebo reports the trial. Whether the agent runs is a human decision.</p>
+      <div class="share" id="share"></div>
+    </article>
+  </div>
+  <footer class="plain">
+    <ul><li><a href="/report.json">Raw report (JSON)</a></li><li><a href="/paper.json">Paper log (JSON)</a></li><li><a href="/methods">Methods</a></li><li><a href="https://github.com/yonkoo11/placebo">GitHub</a></li></ul>
+    <p>Placebo runs on Bitget's public market data. It places no orders.</p>
+  </footer>
+</main>
+</div>
+<script src="/app.js"></script>
+<script>
+(async () => {
+  const st = $("status"), sheet = $("sheet");
+  const m = location.pathname.match(/^\/t\/(.+)$/);
+  const token = m ? decodeURIComponent(m[1]) : new URLSearchParams(location.search).get("t");
+  const fail = (msg) => {
+    sheet.setAttribute("aria-busy", "false"); $("stamp").textContent = "NO TRIAL";
+    st.className = "status error";
+    st.replaceChildren(`This link did not open a trial: ${msg}. `, h("a", { href: "/" }, "Run a new trial from the home page."));
+  };
+  if (!token) return fail("the link carries no trial");
+  try {
+    const data = await postTrial({ token });
+    const hours = data.hours === "us_closed" ? " Positions kept only while the US exchange is closed." : data.hours === "us_open" ? " Positions kept only while the US exchange is open." : "";
+    const runs = data.p_values_per_run.length;
+    $("input").replaceChildren(...(data.agent_source === "uploaded"
+      ? [`Uploaded positions, ${runs} ${runs === 1 ? "run" : "runs"}.`]
+      : ["Question: ", h("span", { class: "m" }, `"${data.question || "Should this agent trade NVDA, TSLA, QQQ?"}"`)]), hours);
+    render(data, { example: false, forest: false, press: true, token: data.token });
+    sheet.setAttribute("aria-busy", "false"); st.textContent = "";
+  } catch (err) { fail(err.message); }
+})();
+</script>
+</body>
+</html>

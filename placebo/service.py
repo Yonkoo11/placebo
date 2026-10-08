@@ -14,13 +14,11 @@ import numpy as np
 
 from . import config as C
 from . import engine as E
+from . import share
 from .data import DATA
+from .share import UserError  # one error class for the page: {reason}
 
 TICKERS = {"NVDA": "NVDAUSDT", "TSLA": "TSLAUSDT", "QQQ": "QQQUSDT"}
-
-
-class UserError(ValueError):
-    """Shown to the user as {reason}."""
 
 
 def parse_question(q: str) -> dict:
@@ -158,18 +156,36 @@ def _fetch_mood() -> dict:
         return {"ok": False, "code": getattr(e, "code", type(e).__name__)}
 
 
+def _trial(question: str, hours: str, symbols: list[str], m: E.Market, uploaded: list[np.ndarray] | None,
+           parser: str) -> dict:
+    """The one trial path: question (reference agent) or uploaded runs, hours filter, evaluate, link token."""
+    if uploaded is not None:
+        runs, invalid, who, samples = uploaded, 0, "uploaded", []
+    else:
+        all_runs, ref = reference_runs()
+        keep = [C.SYMBOLS.index(s) for s in symbols]
+        runs, invalid, who = [r[keep] for r in all_runs], ref["invalid_outputs"], "reference"
+        samples = [d for d in ref.get("sample_decisions", []) if d["symbol"] in symbols]
+    token = share.encode(question, hours, symbols, uploaded)
+    runs = [restrict_hours(r, m, hours) for r in runs]
+    res = E.evaluate(runs, m, invalid=invalid)
+    res.update({"agent_source": who, "parser": parser, "hours": hours, "mood": market_mood(),
+                "sample_decisions": samples, "token": token, "question": question[:500]})
+    return res
+
+
 def run(question: str, csv_text: str | None) -> dict:
     q = parse_question(question or "")
     m = E.load_market(q["symbols"])
-    if csv_text:
-        runs, invalid, who = parse_csv(csv_text, m), 0, "uploaded"
-    else:
-        all_runs, ref = reference_runs()
-        keep = [C.SYMBOLS.index(s) for s in q["symbols"]]
-        runs, invalid, who = [r[keep] for r in all_runs], ref["invalid_outputs"], "reference"
-        samples = [d for d in ref.get("sample_decisions", []) if d["symbol"] in q["symbols"]]
-    runs = [restrict_hours(r, m, q["hours"]) for r in runs]
-    res = E.evaluate(runs, m, invalid=invalid)
-    res.update({"agent_source": who, "parser": q["parser"], "hours": q["hours"], "mood": market_mood(),
-                "sample_decisions": [] if csv_text else samples})
+    uploaded = parse_csv(csv_text, m) if csv_text else None
+    return _trial(question or "", q["hours"], q["symbols"], m, uploaded, q["parser"])
+
+
+def run_token(token: str) -> dict:
+    """Recompute a trial from a shared link. Same path as run(); no model call (the link holds the parsed input)."""
+    d = share.decode(token)
+    m = E.load_market(d["symbols"])
+    uploaded = share.runs_from(d, m.rets.shape) if d["packed"] is not None else None
+    res = _trial(d["question"], d["hours"], d["symbols"], m, uploaded, "link")
+    res["from_link"] = True
     return res

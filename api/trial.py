@@ -25,6 +25,13 @@ class handler(BaseHTTPRequestHandler):
             if n > MAX_BODY:
                 return self._send(413, {"error": "the request is larger than 1 MB"})
             req = json.loads(self.rfile.read(n) or b"{}")
+            if not isinstance(req, dict):
+                return self._send(400, {"error": "the request must be a JSON object"})
+            if "token" in req:
+                tok = req.get("token")
+                if not isinstance(tok, str):
+                    return self._send(400, {"error": "token must be text"})
+                return self._send(200, service.run_token(tok))
             q, csv_text = req.get("question"), req.get("csv")
             if not isinstance(q, str) or (csv_text is not None and not isinstance(csv_text, str)):
                 return self._send(400, {"error": "question must be text"})

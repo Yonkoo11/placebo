@@ -1,4 +1,5 @@
-"""Local stand-in for the Vercel deploy: serves public/ and routes POST /api/trial to api/trial.py."""
+"""Local stand-in for the Vercel deploy: serves public/, routes POST /api/trial to api/trial.py, and applies
+the rewrites in vercel.json (/t/<token> -> /trial.html, /methods -> /methods.html)."""
 import http.server
 import sys
 from pathlib import Path
@@ -11,6 +12,14 @@ from api.trial import handler as TrialHandler  # noqa: E402
 class Dev(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *a, **k):
         super().__init__(*a, directory=str(ROOT / "public"), **k)
+
+    def do_GET(self):
+        path = self.path.split("?", 1)[0]
+        if path.startswith("/t/"):
+            self.path = "/trial.html" + ("?t=" + path[3:])
+        elif path == "/methods":
+            self.path = "/methods.html"
+        return super().do_GET()
 
     def do_POST(self):
         if self.path.startswith("/api/trial"):
