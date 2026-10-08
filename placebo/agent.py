@@ -71,14 +71,14 @@ PACE = _Pace(float(os.environ.get("PLACEBO_RPM", C.LLM_RPM)))
 
 
 def _claude_cli(prompt: str, model: str) -> str:
-    """Claude through the local Claude Code login (used when no API credit is available).
+    """Claude through the local the claude CLI login (used when no API credit is available).
 
-    The default Claude Code system prompt is replaced by SYSTEM, tools are disabled and hooks are
+    The default the claude CLI system prompt is replaced by SYSTEM, tools are disabled and hooks are
     off, so the model sees exactly what an API call would send.
     """
     env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}
-    # An empty working directory and local-only settings keep every CLAUDE.md, memory file and
-    # project context out of the prompt. Claude Code still states today's date in its environment
+    # An empty working directory and local-only settings keep every project instruction file, memory file and
+    # project context out of the prompt. the claude CLI still states today's date in its environment
     # block; that reveals no prices (the model's knowledge ends in early 2025) and is disclosed.
     out = subprocess.run(
         ["claude", "-p", "--model", model, "--system-prompt", SYSTEM, "--output-format", "json",

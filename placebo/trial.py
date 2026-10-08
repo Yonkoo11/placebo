@@ -29,8 +29,8 @@ def build_report(runs=C.AGENT_RUNS, draws=C.PLACEBO_DRAWS, progress=print) -> di
         "model": C.AGENT_MODEL, "symbols": m.symbols, "times": [int(t) for t in m.times],
         "invalid_outputs": invalid, "runs": [p.astype(int).tolist() for p in positions],
         "sample_decisions": sample_decisions(m)}))
-    rep["agent"] = {"model": C.AGENT_MODEL, "model_version": "claude-haiku-4-5-20251001 (Anthropic, released 2025-10)", "runner": "Claude Code headless: default system prompt replaced, tools off, empty working "
-                              "directory, local settings only (no CLAUDE.md or memory); Claude Code's "
+    rep["agent"] = {"model": C.AGENT_MODEL, "model_version": "claude-haiku-4-5-20251001 (Anthropic, released 2025-10)", "runner": "the claude CLI headless: default system prompt replaced, tools off, empty working "
+                              "directory, local settings only (no project notes or memory); the claude CLI's "
                               "environment block still states today's date",
                     "segments_per_run": C.AGENT_SEGMENTS,
                     "segment_note": "each run replays the window as consecutive segments in parallel; "

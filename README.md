@@ -74,7 +74,7 @@ python3 -m placebo.trial --runs 2 | grep -E "Verdict|Beat"
 # → - Beat 30% of 2000 placebo twins, p = 0.705 (one-sided, worst run)
 ```
 
-`python3 -m placebo.data --refresh` refetches the candles from Bitget's public API. Re-running the agent needs Claude Code logged in (see `placebo/agent.py`).
+`python3 -m placebo.data --refresh` refetches the candles from Bitget's public API. Re-running the agent needs the `claude` command-line tool logged in (see `placebo/agent.py`).
 
 ## What's real, and what we did not claim
 
@@ -84,7 +84,7 @@ python3 -m placebo.trial --runs 2 | grep -E "Verdict|Beat"
 | Placebo twin matches timing and size | Tested (`test_placebo_matches_exposure`) |
 | No look-ahead in the agent's inputs | Tested (`test_no_lookahead_in_agent_inputs`) |
 | Reference agent decisions | Real Claude Haiku 4.5 outputs, all 1,056 committed with the model's stated reason |
-| Agent context isolation | Empty working directory, no CLAUDE.md or memory; Claude Code still tells the model today's date (no prices) |
+| Agent context isolation | Empty working directory, no project notes or memory; the `claude` CLI still tells the model today's date (no prices) |
 | Each run replayed as 4 segments in parallel | Each segment starts flat: 3 restarts per run |
 | Slippage | Assumed 0.02%, not measured |
 | Forward paper trading | Local ledger at live Bitget prices every 4 hours, rows say `local-paper`; no exchange orders, no Bitget Demo key yet |
