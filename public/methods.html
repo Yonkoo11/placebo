@@ -14,7 +14,7 @@
 
 </head>
 <body>
-<header><a class="mark" href="/" aria-label="Placebo home"><svg viewBox="0 0 16 16" aria-hidden="true"><g transform="rotate(-4 8 8)"><rect x="1.5" y="3.7" width="13" height="8.6" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3.9" y="6.1" width="8.2" height="3.8" rx=".5" fill="none" stroke="currentColor" stroke-width=".8"/><rect x="5.7" y="7.35" width="4.6" height="1.3" rx=".3" fill="currentColor"/></g></svg>Placebo</a><nav aria-label="Pages"><a href="/">Trial</a><a href="/methods">Methods</a></nav></header>
+<header><a class="mark" href="/" aria-label="Placebo home"><svg viewBox="0 0 16 16" aria-hidden="true"><g transform="rotate(-4 8 8)"><rect x="1.5" y="3.7" width="13" height="8.6" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3.9" y="6.1" width="8.2" height="3.8" rx=".5" fill="none" stroke="currentColor" stroke-width=".8"/><rect x="5.7" y="7.35" width="4.6" height="1.3" rx=".3" fill="currentColor"/></g></svg>Placebo</a><nav aria-label="Pages"><a href="/">Run a trial</a><a href="/methods">Methods</a></nav></header>
 <div class="page">
 <main class="prose">
   <h1>How the trial works. <span class="stamp">pre-registered</span></h1>
@@ -25,6 +25,9 @@
   <p>Your agent's positions are a grid: long, flat or short, for each market at the close of each 4-hour bar, held over the next bar.</p>
   <p>A twin keeps every holding's start, end and size, and redraws its direction with a coin flip. Timing and sizing are identical; only direction is tested.</p>
   <p>Placebo draws 2,000 twins with a fixed random seed (seed 7), so the same input always gives the same numbers and a shared link reopens to the same trial.</p>
+
+  <h2>Uploading your own agent.</h2>
+  <p>A CSV with the header time,symbol,position: time as an ISO date or epoch milliseconds at a 4-hour bar open, symbol NVDA, TSLA or QQQ, position -1, 0 or 1. An optional run column with 2 to 4 values gives one run per value. The file is at most 1 MB.</p>
 
   <h2>The p-value.</h2>
   <p>The agent's annualised Sharpe is compared with the 2,000 twin Sharpes. p = (1 + twins at or above the agent) / 2,001, one-sided. Sharpe uses 2,190 four-hour bars per year.</p>
@@ -51,10 +54,7 @@
   <h2>The paper log.</h2>
   <p>Every 4 hours our machine reads live Bitget prices, asks the same agent for a position, and appends a local-paper row. No exchange orders. The log is published with each deploy.</p>
 
-  <h2>Uploading your own agent.</h2>
-  <p>A CSV with the header time,symbol,position: time as an ISO date or epoch milliseconds at a 4-hour bar open, symbol NVDA, TSLA or QQQ, position -1, 0 or 1. An optional run column with 2 to 4 values gives one run per value. The file is at most 1 MB.</p>
-
-  <h2>What this does not tell you.</h2>
+  <h2 id="limits">What this does not tell you.</h2>
   <ol>
     <li>88 days is short. A "do not deploy" can mean "not proven yet".</li>
     <li>Past bars only. Live fills, funding changes and outages are not in this test.</li>

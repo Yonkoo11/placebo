@@ -60,9 +60,14 @@ h1 { font: var(--fw-500) clamp(22px, 1.6vw + 8px, 28px)/1.25 var(--plex-sans); l
 label.q { display: block; font: var(--fw-500) var(--fs-13)/1.4 var(--plex-sans); margin-bottom: 6px; }
 input[type=text] { width: 100%; font: var(--fw-400) var(--fs-16) var(--plex-sans); color: var(--ink); background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r-control); padding: 12px 14px; box-shadow: inset 0 1px 0 var(--edge), var(--shadow-1); }
 .hint { font-size: var(--fs-14); color: var(--ink-2); margin: var(--s2) 0 var(--s4); }
-.file { display: grid; gap: 6px; font-size: var(--fs-14); color: var(--ink-2); margin: 0 0 var(--s4); }
-.file input { font: var(--fw-400) var(--fs-16) var(--plex-sans); color: var(--ink-2); max-width: 100%; }
-.file input::file-selector-button { font: var(--fw-500) var(--fs-16) var(--plex-sans); color: var(--ink); background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r-control); padding: 0 14px; min-height: 44px; margin-right: 12px; cursor: pointer; }
+.divider { display: flex; align-items: center; gap: var(--s3); font: var(--fw-500) var(--fs-13)/1.4 var(--plex-sans); color: var(--ink-2); margin: var(--s5) 0 var(--s4); }
+.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+.link-line { font-size: var(--fs-16); color: var(--ink-2); margin: var(--s4) 0 0; max-width: 62ch; }
+.link-line a { color: var(--ink); }
+.actions { display: flex; gap: var(--s3); flex-wrap: wrap; margin: var(--s4) 0 0; }
+.share .help { font-size: var(--fs-14); color: var(--ink-2); }
+input[type=file] { display: block; font: var(--fw-400) var(--fs-16) var(--plex-sans); color: var(--ink-2); max-width: 100%; }
+input[type=file]::file-selector-button { font: var(--fw-500) var(--fs-16) var(--plex-sans); color: var(--ink); background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r-control); padding: 0 14px; min-height: 44px; margin-right: 12px; cursor: pointer; }
 button, .btn { display: inline-flex; align-items: center; justify-content: center; font: var(--fw-500) var(--fs-16) var(--plex-sans); color: var(--ground); background: var(--ink); border: 0; border-radius: var(--r-control); padding: 0 22px; min-height: 44px; cursor: pointer; text-decoration: none; box-shadow: var(--shadow-1);
   transition: transform var(--t-hover) var(--ease), box-shadow var(--t-hover) var(--ease); }
 button:active, .btn:active { transform: scale(.97); transition-duration: var(--t-press); }

@@ -167,10 +167,12 @@ def _trial(question: str, hours: str, symbols: list[str], m: E.Market, uploaded:
         runs, invalid, who = [r[keep] for r in all_runs], ref["invalid_outputs"], "reference"
         samples = [d for d in ref.get("sample_decisions", []) if d["symbol"] in symbols]
     token = share.encode(question, hours, symbols, uploaded)
+    # bars on which at least one run holds a position in any market, before the hours filter
+    bars_matched = int((np.abs(np.stack(runs)).sum(axis=(0, 1)) > 0).sum())
     runs = [restrict_hours(r, m, hours) for r in runs]
     res = E.evaluate(runs, m, invalid=invalid)
     res.update({"agent_source": who, "parser": parser, "hours": hours, "mood": market_mood(),
-                "sample_decisions": samples, "token": token, "question": question[:500]})
+                "sample_decisions": samples, "token": token, "question": question[:500], "bars_matched": bars_matched})
     return res
 
 

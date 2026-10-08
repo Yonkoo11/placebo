@@ -35,12 +35,12 @@ let current = null;
 
 // Shareable link: the API returns a token built from the parsed input; the page only copies the URL.
 function linkFor(token) { return `${location.origin}/t/${token}`; }
-function showCopy(token) {
+function showCopy(token, opts = {}) {
   const box = document.getElementById("share");
   if (!box) return;
   box.replaceChildren();
   if (!token) return;
-  const btn = h("button", { type: "button", class: "secondary", id: "copy" }, "Copy link to this trial");
+  const btn = h("button", { type: "button", class: "secondary", id: "copy" }, opts.label || "Copy link to this verdict");
   const url = linkFor(token);
   btn.addEventListener("click", async () => {
     let ok = false;
@@ -51,7 +51,7 @@ function showCopy(token) {
     const label = btn.textContent; btn.textContent = ok ? "Link copied" : "Copy failed, select the link"; btn.disabled = ok;
     setTimeout(() => { btn.textContent = label; btn.disabled = false; }, 2000);
   });
-  box.append(btn, h("span", { class: "m" }, url));
+  box.append(btn, h("span", { class: "help" }, opts.help || "Send it to whoever decides."));
 }
 
 function drawField(pl) {
@@ -126,7 +126,7 @@ function render(r, opts = {}) {
   $("snapshot").textContent = snap ? `Candles, fees and funding pulled from api.bitget.com on ${whenFull(snap)}.` : "";
   $("mood").textContent = "";  // market mood is optional; when Bitget's data service answers with an error the line stays empty
   if (opts.press) { const st = $("stamp"); st.classList.remove("pressed"); void st.offsetWidth; st.classList.add("pressed"); }
-  showCopy(opts.token || null);
+  showCopy(opts.token || null, { label: opts.copyLabel, help: opts.copyHelp });
 }
 
 // Current page in the header nav.

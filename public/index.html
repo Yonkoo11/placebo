@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Placebo: a placebo-controlled trial for your trading agent</title>
+<title>Placebo: test your trading agent before it trades real money</title>
 <meta name="description" content="A placebo-controlled trial for LLM trading agents on Bitget's 24/7 tokenized-stock perps: your agent against 2,000 coin-flip twins with its exact timing and size.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
@@ -14,26 +14,27 @@
 
 </head>
 <body>
-<header><a class="mark" href="/" aria-label="Placebo home"><svg viewBox="0 0 16 16" aria-hidden="true"><g transform="rotate(-4 8 8)"><rect x="1.5" y="3.7" width="13" height="8.6" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3.9" y="6.1" width="8.2" height="3.8" rx=".5" fill="none" stroke="currentColor" stroke-width=".8"/><rect x="5.7" y="7.35" width="4.6" height="1.3" rx=".3" fill="currentColor"/></g></svg>Placebo</a><nav aria-label="Pages"><a href="/">Trial</a><a href="/methods">Methods</a></nav></header>
+<header><a class="mark" href="/" aria-label="Placebo home"><svg viewBox="0 0 16 16" aria-hidden="true"><g transform="rotate(-4 8 8)"><rect x="1.5" y="3.7" width="13" height="8.6" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3.9" y="6.1" width="8.2" height="3.8" rx=".5" fill="none" stroke="currentColor" stroke-width=".8"/><rect x="5.7" y="7.35" width="4.6" height="1.3" rx=".3" fill="currentColor"/></g></svg>Placebo</a><nav aria-label="Pages"><a href="/">Run a trial</a><a href="/methods">Methods</a></nav></header>
 <div class="page">
 <main>
   <div class="first">
     <form id="f" novalidate>
-      <h1>Placebo runs a placebo-controlled trial on your trading agent, on Bitget's 24/7 stock perps.</h1>
-      <p class="lede">Your agent trades. Its twin copies every entry, exit and size, then flips a coin for direction. If your agent cannot beat 2,000 coin-flip twins, it has no edge yet.</p>
-      <label class="q" for="q">Ask</label>
+      <h1>Test your trading agent before it trades real money.</h1>
+      <p class="lede">Upload its positions. Placebo builds 2,000 twins that copy its timing and size and flip a coin for direction, replays all of them on Bitget's 24/7 stock perps with real fees, and stamps a verdict.</p>
+      <label class="q" for="upload">Your agent's positions (CSV)</label>
+      <input id="upload" type="file" accept=".csv,text/csv">
+      <p class="hint">time,symbol,position, optional run column; 2 to 4 runs can reach DEPLOY, 1 run tops out at HALF SIZE. <a href="/example-positions.csv" download>Download an example CSV</a></p>
+      <p class="divider">No positions yet?</p>
+      <label class="q" for="q">Ask about our reference agent</label>
       <input id="q" type="text" value="Should this agent trade NVDA, TSLA, QQQ?" autocomplete="off" maxlength="500">
-      <p class="hint">Also try: "What if it only trades while the US market is closed?" An upload with one run tops out at HALF SIZE; 2 to 4 runs can reach DEPLOY.</p>
-      <label class="file">Upload a positions CSV (time,symbol,position; optional run column)
-        <input id="csv" type="file" accept=".csv,text/csv">
-      </label>
+      <p class="hint">Also try: "What if it only trades while the US market is closed?"</p>
       <button id="run" type="submit">Run the trial</button>
       <p id="status" class="status" role="status" aria-live="polite">Data: Bitget USDT-M perps, 4-hour bars, 1 Jul to 26 Sep 2026, 528 bars per market.</p>
     </form>
 
     <article id="sheet" class="sheet" aria-live="polite" aria-busy="false">
       <div class="stamp verdict pressed" id="stamp">DO NOT DEPLOY</div>
-      <p class="example" id="example">A worked example from Bitget candles: the reference agent (Claude Haiku 4.5), 1 Jul to 26 Sep 2026. Run the trial above to replace it.</p>
+      <p class="example" id="example">Example result: our own agent, Claude Haiku 4.5, 1 Jul to 26 Sep 2026. Yours replaces it when you run a trial.</p>
       <p class="tagline"><svg class="whisker" id="whisker" viewBox="0 0 28 12" aria-hidden="true"></svg><span id="tag" style="color: var(--ink-2)">No detectable edge</span></p>
       <p class="verdict-text" id="vtext">Do not deploy. It beat only 30% of its placebo twins. A coin flip with the same timing does about as well.</p>
       <p class="pline" id="pline">p = 0.705 against 2,000 placebo twins (one-sided). Worst of 2 runs; run Sharpes -4.86 and -2.29; consistency 72%.</p>
@@ -50,11 +51,13 @@
       <p class="mood" id="mood"></p>
       <p class="call">Placebo reports the trial. Whether the agent runs is a human decision.</p>
       <div class="share" id="share"></div>
+      <p class="link-line">How the twin is built, what every arm pays, and the verdict rule fixed before any run: <a href="/methods">Methods</a>.</p>
+      <p class="link-line">88 days of past bars. A do-not-deploy can mean not proven yet. <a href="/methods#limits">Limits</a>.</p>
     </article>
   </div>
 
   <section id="decisions">
-    <h2>Every call it made, with its own reason.</h2>
+    <h2>Every call the reference agent made, with its reason.</h2>
     <div class="filters" id="filters"></div>
     <p class="note" id="dcount">Loading the decision log.</p>
     <div id="rows"></div>
@@ -62,26 +65,13 @@
   </section>
 
   <section id="paper">
-    <h2>Forward paper log at live Bitget prices.</h2>
+    <h2>Still running: the same agent, every 4 hours, at live Bitget prices.</h2>
     <p class="note">Every 4 hours our machine reads live Bitget prices, asks the same agent (Claude Haiku 4.5) for a position, and appends a local-paper row. No exchange orders. The log is published with each deploy, so the last row here is the last deploy's.</p>
     <div id="paperrows"></div>
     <p class="live" id="live"></p>
   </section>
 
-  <section id="limits">
-    <h2>What this does not tell you. <span class="stamp">outside this trial</span></h2>
-    <ol class="limits">
-      <li>88 days is short. A "do not deploy" can mean "not proven yet".</li>
-      <li>Past bars only. Live fills, funding changes and outages are not in this test.</li>
-      <li>Results are for these three markets and this window. Different markets need a new trial.</li>
-      <li>The LLM saw no tickers or dates, and its release predates the window, but hiding names cannot hide every pattern.</li>
-    </ol>
-  </section>
-
   <footer>
-    <p>The reference agent is Claude Haiku 4.5 (released October 2025, so it cannot have seen these prices). Every 4 hours it sets a long, flat or short position in three Bitget USDT-M perps: NVDAUSDT, TSLAUSDT and QQQUSDT. It sees the last twelve 4-hour returns, recent volatility, whether the US exchange is closed, and its own position. It never sees a ticker or a price date. It was run twice, and each run replays the window as four segments that each start flat.</p>
-    <p>Each twin keeps the agent's exact timing and size and redraws the direction of every holding at random. Every arm pays Bitget's 0.06% taker fee, an assumed 0.02% slippage and Bitget's recorded funding.</p>
-    <p><span class="stamp">pre-registered</span>Verdict rule, fixed before any run: deploy only if the agent beats 95% of twins in every run, beats a simple momentum rule, agrees with itself on at least 80% of decisions, and never draws down more than 20%.</p>
     <ul><li><a href="/report.json">Raw report (JSON)</a></li><li><a href="/paper.json">Paper log (JSON)</a></li><li><a href="/methods">Methods</a></li><li><a href="https://github.com/yonkoo11/placebo">GitHub</a></li></ul>
     <p>Placebo runs on Bitget's public market data. It places no orders.</p>
   </footer>
@@ -128,13 +118,14 @@ async function load() {
 }
 load();
 
+if (location.hash === "#upload") { const u = $("upload"); u.focus(); u.scrollIntoView({ block: "center" }); }
 $("f").addEventListener("submit", async (e) => {
   e.preventDefault();
   const btn = $("run"), st = $("status"), sheet = $("sheet"), label = btn.textContent;
   btn.disabled = true; btn.textContent = "Running"; sheet.setAttribute("aria-busy", "true");
   st.className = "status"; st.textContent = "Running 2,000 twins on Bitget candles. 2 to 10 seconds.";
   try {
-    const file = $("csv").files[0];
+    const file = $("upload").files[0];
     if (file && file.size > 1_000_000) throw new Error("the CSV is larger than 1 MB");
     const data = await postTrial({ question: $("q").value, csv: file ? await file.text() : null });
     render(data, { example: false, forest: false, press: true, token: data.token });

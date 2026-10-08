@@ -40,7 +40,7 @@ A trial for a trading agent, and a desk where a person asks whether to switch it
 
 </div>
 
-1. **Question.** Type it in plain English ("What if it only trades while the US market is closed?") or upload your agent's positions as `time,symbol,position` (add a `run` column with 2 or more values to be judged for DEPLOY; a single run can reach HALF SIZE at most, because consistency needs a second run). A small model reads the question for markets and trading hours only.
+1. **Your agent's positions.** Upload them as `time,symbol,position` (add a `run` column with 2 to 4 values to be judged for DEPLOY; a single run can reach HALF SIZE at most, because consistency needs a second run). [An example CSV](https://placebo-eight.vercel.app/example-positions.csv) holds the reference agent's real positions, both runs. No positions yet? Ask about our reference agent in plain English ("What if it only trades while the US market is closed?"); a small model reads the question for markets and trading hours only.
 2. **Replay.** Bitget USDT-M perps NVDAUSDT, TSLAUSDT and QQQUSDT, 4-hour bars from 1 Jul to 26 Sep 2026 (528 bars each). A decision at the close of a bar is held over the next bar. Every change pays Bitget's 0.06% taker fee plus 0.02% assumed slippage; funding comes from Bitget's history.
 3. **Twins.** Each twin keeps every holding's start, end and size, and redraws its direction at random. Costs are identical, so the only thing tested is direction.
 4. **Verdict.** Fixed before any run. **Deploy** if the agent beats 95% of twins in every run, beats a momentum rule, agrees with itself on 80%+ of decisions and never draws down more than 20%. **Half size** if it beats 80% and makes money. **Do not deploy** otherwise.
@@ -68,7 +68,7 @@ No key, no account, no network: the Bitget snapshot and every agent decision are
 git clone https://github.com/yonkoo11/placebo && cd placebo
 pip install numpy pytest
 python3 -m placebo.data --check     # → NVDAUSDT 528 bars  taker 0.0006  funding events 264 (non-zero 49)  (and TSLA, QQQ)
-python3 -m pytest -q tests          # → 36 passed
+python3 -m pytest -q tests          # → 37 passed
 python3 -m placebo.trial --runs 2 | grep -E "Verdict|Beat"
 # → Verdict: **DO NOT DEPLOY**
 # → - Beat 30% of 2000 placebo twins, p = 0.705 (one-sided, worst run)
@@ -105,7 +105,7 @@ placebo/
   trial.py     CLI: runs the reference trial, writes out/report.json
   paper.py     one forward paper step at live Bitget prices
 api/trial.py   serverless handler for the live page (question, CSV, or a link token)
-public/        index.html (trial desk), trial.html (a shared trial at /t/<token>), methods.html, app.css, app.js, report.json
+public/        index.html (upload or ask, the stamped readout), trial.html (a shared trial at /t/<token>), methods.html, example-positions.csv, app.css, app.js, report.json
 data/          Bitget snapshot, agent decisions, paper log
 tests/         engine and upload tests
 ```

@@ -14,15 +14,15 @@
 
 </head>
 <body>
-<header><a class="mark" href="/" aria-label="Placebo home"><svg viewBox="0 0 16 16" aria-hidden="true"><g transform="rotate(-4 8 8)"><rect x="1.5" y="3.7" width="13" height="8.6" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3.9" y="6.1" width="8.2" height="3.8" rx=".5" fill="none" stroke="currentColor" stroke-width=".8"/><rect x="5.7" y="7.35" width="4.6" height="1.3" rx=".3" fill="currentColor"/></g></svg>Placebo</a><nav aria-label="Pages"><a href="/">Trial</a><a href="/methods">Methods</a></nav></header>
+<header><a class="mark" href="/" aria-label="Placebo home"><svg viewBox="0 0 16 16" aria-hidden="true"><g transform="rotate(-4 8 8)"><rect x="1.5" y="3.7" width="13" height="8.6" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3.9" y="6.1" width="8.2" height="3.8" rx=".5" fill="none" stroke="currentColor" stroke-width=".8"/><rect x="5.7" y="7.35" width="4.6" height="1.3" rx=".3" fill="currentColor"/></g></svg>Placebo</a><nav aria-label="Pages"><a href="/">Run a trial</a><a href="/methods">Methods</a></nav></header>
 <div class="page">
 <main>
   <div class="first">
     <div>
-      <h1>A trial opened from a link.</h1>
-      <p class="linknote">Trial opened from a link; recomputed now on the same data.</p>
+      <h1 id="h1">Checking this agent against 2,000 twins.</h1>
+      <p class="linknote">Recomputed just now on the same Bitget data, so these numbers are the original's.</p>
       <p class="input-line" id="input"></p>
-      <a class="btn" href="/">Run another trial</a>
+      <div class="actions"><a class="btn" href="/#upload">Test your own agent</a><button type="button" class="secondary" id="copy-top" hidden>Copy link</button></div>
       <p id="status" class="status" role="status" aria-live="polite">Recomputing 2,000 twins on Bitget candles. 2 to 10 seconds.</p>
     </div>
     <article id="sheet" class="sheet" aria-live="polite" aria-busy="true">
@@ -59,7 +59,7 @@
   const m = location.pathname.match(/^\/t\/(.+)$/);
   const token = m ? decodeURIComponent(m[1]) : new URLSearchParams(location.search).get("t");
   const fail = (msg) => {
-    sheet.setAttribute("aria-busy", "false"); $("stamp").textContent = "NO TRIAL";
+    sheet.setAttribute("aria-busy", "false"); $("stamp").textContent = "NO TRIAL"; $("h1").textContent = "This link did not open a trial.";
     st.className = "status error";
     st.replaceChildren(`This link did not open a trial: ${msg}. `, h("a", { href: "/" }, "Run a new trial from the home page."));
   };
@@ -69,9 +69,11 @@
     const hours = data.hours === "us_closed" ? " Positions kept only while the US exchange is closed." : data.hours === "us_open" ? " Positions kept only while the US exchange is open." : "";
     const runs = data.p_values_per_run.length;
     $("input").replaceChildren(...(data.agent_source === "uploaded"
-      ? [`Uploaded positions, ${runs} ${runs === 1 ? "run" : "runs"}.`]
+      ? [`Uploaded positions, ${runs} ${runs === 1 ? "run" : "runs"}, ${data.bars_matched} bars matched.`]
       : ["Question: ", h("span", { class: "m" }, `"${data.question || "Should this agent trade NVDA, TSLA, QQQ?"}"`)]), hours);
-    render(data, { example: false, forest: false, press: true, token: data.token });
+    render(data, { example: false, forest: false, press: true, token: data.token, copyLabel: "Copy link", copyHelp: "Send it to whoever decides." });
+    $("h1").textContent = $("vtext").textContent.split(". ").slice(0, 2).join(". ").replace(/\.?$/, ".");
+    const top = $("copy-top"); top.hidden = false; top.addEventListener("click", () => $("copy").click());
     sheet.setAttribute("aria-busy", "false"); st.textContent = "";
   } catch (err) { fail(err.message); }
 })();

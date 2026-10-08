@@ -84,3 +84,14 @@ def test_zlib_bomb_is_refused_before_it_inflates():
     bomb = base64.urlsafe_b64encode(zlib.compress(b"0" * 5_000_000, 9)).rstrip(b"=").decode()
     with pytest.raises(share.UserError, match="too large"):
         share.decode(bomb)
+
+
+def test_example_csv_parses_and_runs_as_two_runs():
+    text = open("public/example-positions.csv").read()
+    runs = S.parse_csv(text, E.load_market())
+    assert len(runs) == 2 and runs[0].shape == (3, 528)
+    res = S.run("Should this agent trade NVDA, TSLA, QQQ?", text)
+    assert res["verdict"] in (C.VERDICT_NO, C.VERDICT_HALF, C.VERDICT_DEPLOY)
+    assert res["agent_source"] == "uploaded" and len(res["p_values_per_run"]) == 2
+    assert 0 < res["bars_matched"] <= 528
+    assert S.run_token(res["token"])["placebo"]["p_value"] == res["placebo"]["p_value"]
